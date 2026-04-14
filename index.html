@@ -63,6 +63,11 @@
         </div>
 
         <div id="tela-sumula" class="tab-content hidden space-y-4">
+            <button id="btnVAR" type="button" onclick="document.getElementById('inputCamera').click()" class="w-full bg-blue-600 active:bg-blue-800 p-4 rounded-xl font-black text-white uppercase tracking-widest shadow-lg transition transform active:scale-95 flex items-center justify-center gap-2 mb-4 border border-blue-400">
+                <i class="fa-solid fa-camera text-xl"></i> ACIONAR VAR (IA)
+            </button>
+            <input type="file" id="inputCamera" accept="image/*" capture="environment" class="hidden" onchange="processarImagemVAR(this)">
+
             <section class="bg-slate-800 p-5 rounded-xl border-t-4 border-red-500 shadow-xl">
                 <h2 class="text-[10px] font-bold text-red-400 uppercase mb-3 flex items-center gap-2">1. Info Básica</h2>
                 <input type="text" id="adversario" placeholder="Adversário" class="bg-transparent border-b border-slate-700 text-white font-bold w-full outline-none text-lg pb-2 mb-4">
@@ -77,12 +82,30 @@
                 <h2 class="text-[10px] font-bold text-green-400 uppercase mb-3 flex items-center gap-2">2. O Mapa da Mina</h2>
                 <div class="space-y-3">
                     <div>
-                        <label class="block text-[10px] text-gray-400 font-bold uppercase mb-1"><i class="fa-solid fa-futbol"></i> Gols (Separe por vírgula)</label>
-                        <input type="text" id="marcadores" placeholder="Ex: Brenner, Spinelli" class="w-full bg-slate-700 rounded-lg p-2.5 text-white text-sm outline-none">
+                        <label class="flex justify-between items-center text-[10px] text-gray-400 font-bold uppercase mb-1">
+                            <span><i class="fa-solid fa-futbol"></i> Gols</span>
+                            <button type="button" onclick="adicionarLinhaGol()" class="text-green-400 hover:text-green-300 text-[10px] flex items-center gap-1"><i class="fa-solid fa-plus"></i> Add</button>
+                        </label>
+                        <div id="containerGols" class="space-y-2">
+                            <div class="flex gap-2">
+                                <input type="text" list="listaElencoFixo" placeholder="Jogador" class="flex-1 bg-slate-700 rounded-lg p-2.5 text-white text-sm outline-none">
+                                <input type="number" min="1" value="1" class="w-14 bg-slate-700 rounded-lg p-2.5 text-white text-sm outline-none text-center">
+                                <button type="button" onclick="this.parentElement.remove()" class="text-red-500 px-1 hover:text-red-400"><i class="fa-solid fa-trash"></i></button>
+                            </div>
+                        </div>
                     </div>
                     <div>
-                        <label class="block text-[10px] text-gray-400 font-bold uppercase mb-1"><i class="fa-solid fa-shoe-prints"></i> Assistências</label>
-                        <input type="text" id="assistencias" placeholder="Ex: Devid, Nuno" class="w-full bg-slate-700 rounded-lg p-2.5 text-white text-sm outline-none">
+                        <label class="flex justify-between items-center text-[10px] text-gray-400 font-bold uppercase mb-1">
+                            <span><i class="fa-solid fa-shoe-prints"></i> Assistências</span>
+                            <button type="button" onclick="adicionarLinhaAssist()" class="text-blue-400 hover:text-blue-300 text-[10px] flex items-center gap-1"><i class="fa-solid fa-plus"></i> Add</button>
+                        </label>
+                        <div id="containerAssists" class="space-y-2">
+                            <div class="flex gap-2">
+                                <input type="text" list="listaElencoFixo" placeholder="Jogador" class="flex-1 bg-slate-700 rounded-lg p-2.5 text-white text-sm outline-none">
+                                <input type="number" min="1" value="1" class="w-14 bg-slate-700 rounded-lg p-2.5 text-white text-sm outline-none text-center">
+                                <button type="button" onclick="this.parentElement.remove()" class="text-red-500 px-1 hover:text-red-400"><i class="fa-solid fa-trash"></i></button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -91,10 +114,10 @@
                 <h2 class="text-[10px] font-bold text-yellow-400 uppercase mb-3 flex items-center gap-2">3. Disciplina e Saúde</h2>
                 <div class="space-y-3">
                     <div class="flex gap-3">
-                        <div class="flex-1"><label class="block text-[10px] text-gray-400 font-bold uppercase mb-1">🟨 Amarelos</label><input type="text" id="amarelos" class="w-full bg-slate-700 rounded-lg p-2 text-white text-xs outline-none"></div>
-                        <div class="flex-1"><label class="block text-[10px] text-gray-400 font-bold uppercase mb-1">🟥 Vermelhos</label><input type="text" id="vermelhos" class="w-full bg-slate-700 rounded-lg p-2 text-white text-xs outline-none"></div>
+                        <div class="flex-1"><label class="block text-[10px] text-gray-400 font-bold uppercase mb-1">🟨 Amarelos</label><input type="text" id="amarelos" list="listaElencoFixo" class="w-full bg-slate-700 rounded-lg p-2 text-white text-xs outline-none"></div>
+                        <div class="flex-1"><label class="block text-[10px] text-gray-400 font-bold uppercase mb-1">🟥 Vermelhos</label><input type="text" id="vermelhos" list="listaElencoFixo" class="w-full bg-slate-700 rounded-lg p-2 text-white text-xs outline-none"></div>
                     </div>
-                    <div><label class="block text-[10px] text-gray-400 font-bold uppercase mb-1">🚑 Lesões</label><input type="text" id="lesoes" class="w-full bg-slate-700 rounded-lg p-2 text-white text-xs outline-none"></div>
+                    <div><label class="block text-[10px] text-gray-400 font-bold uppercase mb-1">🚑 Lesões</label><input type="text" id="lesoes" list="listaElencoFixo" class="w-full bg-slate-700 rounded-lg p-2 text-white text-xs outline-none"></div>
                 </div>
             </section>
 
@@ -131,6 +154,13 @@
                 </div>
             </div>
 
+            <div class="bg-slate-800 p-5 rounded-xl shadow-xl border-t-4 border-white mt-4">
+                <h3 class="text-xs font-bold text-gray-400 uppercase mb-3 flex items-center gap-2"><i class="fa-solid fa-users text-white"></i> Plantel Completo</h3>
+                <div id="listaElencoDisplay" class="space-y-2 divide-y divide-slate-700">
+                    <div class="text-center p-6 text-gray-500 text-xs">Carregando elenco...</div>
+                </div>
+            </div>
+
         </div>
 
     </main>
@@ -145,6 +175,7 @@
         </div>
     </nav>
 
+    <datalist id="listaElencoFixo"></datalist>
     <script src="app.js"></script>
 </body>
 </html>

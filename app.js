@@ -3,6 +3,7 @@ var supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIs
 window.meuSupabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 var carreiraAtualId = null;
 var agendaAtual = [];
+var elencoFixo = [];
 
 async function iniciarApp() {
     try {
@@ -14,12 +15,58 @@ async function iniciarApp() {
             document.getElementById('barraNavegacao').classList.remove('hidden');
             window.mudarTela('dashboard', 'Visão Geral', 'fa-house');
             atualizarDashboard();
+            await window.carregarElenco();
+            window.popularSeletorSúmula();
             carregarAgenda(); 
             carregarRankings(); // CARREGA O RANKING AO ABRIR O APP
         } else {
             window.mudarTela('cadastro', 'Assinar Contrato', 'fa-id-card');
         }
     } catch (e) { window.mudarTela('cadastro', 'Assinar Contrato', 'fa-id-card'); }
+}
+
+window.carregarElenco = async function() {
+    try {
+        const { data, error } = await window.meuSupabase.from('jogadores').select('*').order('nome', { ascending: true });
+        if (!error && data) {
+            elencoFixo = data;
+        }
+    } catch(e) { console.error(e); }
+}
+
+window.popularSeletorSúmula = function() {
+    let html = '';
+    let squadHtml = '';
+    
+    if (elencoFixo.length === 0) {
+        squadHtml = '<div class="text-center p-6 text-gray-500 text-xs">Nenhum jogador cadastrado.</div>';
+    } else {
+        elencoFixo.forEach(jogador => {
+            html += `<option value="${jogador.nome}"></option>`;
+            let pos = jogador.posicao ? `<span class="text-[9px] bg-slate-700 px-1.5 py-0.5 rounded text-gray-400 font-bold">${jogador.posicao}</span>` : '';
+            squadHtml += `<div class="py-2 flex justify-between items-center"><span class="font-bold text-sm text-gray-200">${jogador.nome}</span> ${pos}</div>`;
+        });
+    }
+    
+    const dataList = document.getElementById('listaElencoFixo');
+    if (dataList) dataList.innerHTML = html;
+    
+    const displayElenco = document.getElementById('listaElencoDisplay');
+    if (displayElenco) displayElenco.innerHTML = squadHtml;
+}
+
+window.adicionarLinhaGol = function() {
+    const div = document.createElement('div');
+    div.className = 'flex gap-2';
+    div.innerHTML = `<input type="text" list="listaElencoFixo" placeholder="Jogador" class="flex-1 bg-slate-700 rounded-lg p-2.5 text-white text-sm outline-none"><input type="number" min="1" value="1" class="w-14 bg-slate-700 rounded-lg p-2.5 text-white text-sm outline-none text-center"><button type="button" onclick="this.parentElement.remove()" class="text-red-500 px-1 hover:text-red-400"><i class="fa-solid fa-trash"></i></button>`;
+    document.getElementById('containerGols').appendChild(div);
+}
+
+window.adicionarLinhaAssist = function() {
+    const div = document.createElement('div');
+    div.className = 'flex gap-2';
+    div.innerHTML = `<input type="text" list="listaElencoFixo" placeholder="Jogador" class="flex-1 bg-slate-700 rounded-lg p-2.5 text-white text-sm outline-none"><input type="number" min="1" value="1" class="w-14 bg-slate-700 rounded-lg p-2.5 text-white text-sm outline-none text-center"><button type="button" onclick="this.parentElement.remove()" class="text-red-500 px-1 hover:text-red-400"><i class="fa-solid fa-trash"></i></button>`;
+    document.getElementById('containerAssists').appendChild(div);
 }
 
 // A MÁGICA DOS RANKINGS
@@ -34,38 +81,36 @@ window.carregarRankings = async function() {
         // Lê cada partida
         data.forEach(partida => {
             if(partida.fato_do_jogo) {
-                const texto = partida.fato_do_jogo;
+                let dadosEstruturados;
+                try {
+                    dadosEstruturados = JSON.parse(partida.fato_do_jogo);
+                } catch(e) {
+                    return; // Ignora formato de texto livre antigo
+                }
                 
-                // Encontra quem fez gol e quem deu passe no meio do texto
-                const matchGols = texto.match(/Gols:\s*(.*?)\.\s*Assists/);
-                const matchAssists = texto.match(/Assists:\s*(.*?)\.\s*Cartões/);
-
-                if(matchGols && matchGols[1]) {
-                    matchGols[1].split(',').forEach(nome => {
-                        let jNome = nome.trim();
-                        // Conta os gols de cada um
-                        if(jNome && jNome.toLowerCase() !== "nenhum") {
-                            if(!statsJogadores[jNome]) statsJogadores[jNome] = { gols: 0, assists: 0 };
-                            statsJogadores[jNome].gols += 1;
-                        }
+                if (dadosEstruturados.gols && Array.isArray(dadosEstruturados.gols)) {
+                    dadosEstruturados.gols.forEach(nome => {
+                        if(!statsJogadores[nome]) statsJogadores[nome] = { gols: 0, assists: 0 };
+                        statsJogadores[nome].gols += 1;
                     });
                 }
 
-                if(matchAssists && matchAssists[1]) {
-                    matchAssists[1].split(',').forEach(nome => {
-                        let jNome = nome.trim();
-                        // Conta as assistências de cada um
-                        if(jNome && jNome.toLowerCase() !== "nenhum") {
-                            if(!statsJogadores[jNome]) statsJogadores[jNome] = { gols: 0, assists: 0 };
-                            statsJogadores[jNome].assists += 1;
-                        }
+                if (dadosEstruturados.assists && Array.isArray(dadosEstruturados.assists)) {
+                    dadosEstruturados.assists.forEach(nome => {
+                        if(!statsJogadores[nome]) statsJogadores[nome] = { gols: 0, assists: 0 };
+                        statsJogadores[nome].assists += 1;
                     });
                 }
             }
         });
 
-        // Transforma os dados em lista para ordenar
-        let arrayJogadores = Object.keys(statsJogadores).map(nome => ({ nome, ...statsJogadores[nome] }));
+        // Filtra para garantir que só entram no ranking se estiverem no elenco fixo, resolvendo os problemas de typo
+        let arrayJogadores = Object.keys(statsJogadores)
+            .filter(nome => elencoFixo.some(jogador => jogador.nome.toLowerCase() === nome.toLowerCase()))
+            .map(nome => {
+                let nomeOficial = elencoFixo.find(jogador => jogador.nome.toLowerCase() === nome.toLowerCase()).nome;
+                return { nome: nomeOficial, ...statsJogadores[nome] };
+            });
 
         // Monta a tela de GOLS
         let artilheiros = [...arrayJogadores].filter(j => j.gols > 0).sort((a, b) => b.gols - a.gols);
@@ -144,12 +189,99 @@ window.mudarTela = function(idTela, titulo, icone) {
     window.scrollTo(0, 0); 
 }
 
+window.processarImagemVAR = function(input) {
+    if (input.files && input.files[0]) {
+        const file = input.files[0];
+        const reader = new FileReader();
+        
+        reader.onload = async function(e) {
+            const base64completo = e.target.result;
+            const apenasBase64 = base64completo.split(',')[1];
+            
+            const btnVar = document.getElementById('btnVAR');
+            const originalText = btnVar.innerHTML;
+            btnVar.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> VAR ANALISANDO...`;
+            btnVar.disabled = true;
+
+            try {
+                const resposta = await fetch('/api/analisar-jogo', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ imagemBase64: apenasBase64 })
+                });
+
+                if (!resposta.ok) throw new Error("A sala de controle não respondeu.");
+                
+                const dados = await resposta.json();
+                preencherSumulaVAR(dados);
+                
+                btnVar.innerHTML = `<i class="fa-solid fa-check text-xl"></i> SÚMULA PREENCHIDA!`;
+                btnVar.classList.replace('bg-blue-600', 'bg-green-600');
+                btnVar.classList.replace('border-blue-400', 'border-green-400');
+                
+                // Atualizar barra de cima confirmando acidez da foto
+                document.getElementById('btnSalvar').innerHTML = "Salvar e Coletiva 🎙️ (VAR Lido Confirmado!)";
+
+                setTimeout(() => {
+                    btnVar.innerHTML = originalText;
+                    btnVar.classList.replace('bg-green-600', 'bg-blue-600');
+                    btnVar.classList.replace('border-green-400', 'border-blue-400');
+                    btnVar.disabled = false;
+                }, 4000);
+
+            } catch(err) {
+                alert("Decisão de Campo mantida (Erro no VAR): " + err.message);
+                btnVar.innerHTML = originalText;
+                btnVar.disabled = false;
+            }
+        };
+        
+        reader.readAsDataURL(file); // Trigger
+    }
+}
+
+window.preencherSumulaVAR = function(dados) {
+    if(dados.gols_pro !== undefined) document.getElementById('golsPro').value = dados.gols_pro;
+    if(dados.gols_contra !== undefined) document.getElementById('golsContra').value = dados.gols_contra;
+    
+    document.getElementById('adversario').value = `Auto-Preenchido Tatico ${Math.floor(Math.random() * 99)}`; // Evita erro se campo obrigatorio mas a IA nao le adv
+
+    const renderDinamicRows = (containerId, arrDestaques) => {
+        const container = document.getElementById(containerId);
+        container.innerHTML = ''; 
+        if(!arrDestaques || arrDestaques.length === 0) {
+            container.innerHTML = `<div class="flex gap-2"><input type="text" list="listaElencoFixo" placeholder="Jogador" class="flex-1 bg-slate-700 rounded-lg p-2.5 text-white text-sm outline-none"><input type="number" min="1" value="1" class="w-14 bg-slate-700 rounded-lg p-2.5 text-white text-sm outline-none text-center"><button type="button" onclick="this.parentElement.remove()" class="text-red-500 px-1 hover:text-red-400"><i class="fa-solid fa-trash"></i></button></div>`;
+            return;
+        }
+
+        let contagem = {};
+        arrDestaques.forEach(n => {
+            let nomeCapitalizado = n.trim(); // Se a db falhar dps o array filter ignora
+            contagem[nomeCapitalizado] = (contagem[nomeCapitalizado] || 0) + 1;
+        });
+
+        Object.keys(contagem).forEach(nomeJogador => {
+            let qtd = contagem[nomeJogador];
+            const div = document.createElement('div');
+            div.className = 'flex gap-2';
+            div.innerHTML = `<input type="text" list="listaElencoFixo" value="${nomeJogador}" placeholder="Jogador" class="flex-1 bg-slate-700 rounded-lg p-2.5 text-white text-sm outline-none"><input type="number" min="1" value="${qtd}" class="w-14 bg-slate-700 rounded-lg p-2.5 text-white text-sm outline-none text-center"><button type="button" onclick="this.parentElement.remove()" class="text-red-500 px-1 hover:text-red-400"><i class="fa-solid fa-trash"></i></button>`;
+            container.appendChild(div);
+        });
+    };
+
+    renderDinamicRows('containerGols', dados.marcadores);
+    renderDinamicRows('containerAssists', dados.assistencias);
+
+    if(dados.amarelos) document.getElementById('amarelos').value = dados.amarelos.join(', ');
+    if(dados.vermelhos) document.getElementById('vermelhos').value = dados.vermelhos.join(', ');
+    
+    if(dados.fato_do_jogo) document.getElementById('fatoDoJogo').value = dados.fato_do_jogo;
+}
+
 window.salvarPartida = async function() {
     const adv = document.getElementById('adversario').value; const pro = document.getElementById('golsPro').value;
     const contra = document.getElementById('golsContra').value; const fato = document.getElementById('fatoDoJogo').value;
     
-    const marcadores = document.getElementById('marcadores').value || "Nenhum";
-    const assistencias = document.getElementById('assistencias').value || "Nenhum";
     const amarelos = document.getElementById('amarelos').value || "Nenhum";
     const vermelhos = document.getElementById('vermelhos').value || "Nenhum";
     const lesoes = document.getElementById('lesoes').value || "Nenhuma";
@@ -158,11 +290,51 @@ window.salvarPartida = async function() {
     
     document.getElementById('btnSalvar').innerHTML = "Enviando... ⏳";
     try {
-        // A STRING PADRONIZADA: É daqui que o ranking extrai os dados depois!
-        const detalhesParaIA = `Gols: ${marcadores}. Assists: ${assistencias}. Cartões/Lesões: ${amarelos} / ${vermelhos} / ${lesoes}. Relato: ${fato}`;
+        const parseDinamico = (containerId) => {
+            let nomes = [];
+            const container = document.getElementById(containerId);
+            if(container) {
+                container.querySelectorAll('div').forEach(linha => {
+                    const textInput = linha.querySelector('input[type="text"]');
+                    const numInput = linha.querySelector('input[type="number"]');
+                    let n = textInput ? textInput.value.trim() : '';
+                    let q = numInput ? parseInt(numInput.value) : 1;
+                    if(n && n.toLowerCase() !== "nenhum" && n.toLowerCase() !== "nenhuma") {
+                        for(let i=0; i<q; i++) nomes.push(n);
+                    }
+                });
+            }
+            return nomes;
+        };
+
+        const parseNomes = (str) => {
+            if (!str || str.toLowerCase() === "nenhum" || str.toLowerCase() === "nenhuma") return [];
+            return str.split(',').map(s => s.trim()).filter(s => s);
+        };
+
+        const golsExtraidos = parseDinamico('containerGols');
+        const assistsExtraidas = parseDinamico('containerAssists');
+        const marcadoresStr = golsExtraidos.join(', ') || "Nenhum";
+        const assistenciasStr = assistsExtraidas.join(', ') || "Nenhum";
+
+        const dadosEstruturados = {
+            gols: golsExtraidos,
+            assists: assistsExtraidas,
+            cartoes: {
+                amarelos: parseNomes(amarelos),
+                vermelhos: parseNomes(vermelhos)
+            },
+            lesoes: parseNomes(lesoes),
+            relato: fato
+        };
+        const fatoJson = JSON.stringify(dadosEstruturados);
+
+        // A STRING PADRONIZADA para consumo local/simulado
+        const detalhesParaIA = `Gols: ${marcadoresStr}. Assists: ${assistenciasStr}. Cartões/Lesões: ${amarelos} / ${vermelhos} / ${lesoes}. Relato: ${fato}`;
         const tweets = await simularIAGemini(adv, pro, contra, detalhesParaIA);
         
-        await window.meuSupabase.from('partidas').insert([{ carreira_id: carreiraAtualId, adversario: adv, gols_pro: parseInt(pro), gols_contra: parseInt(contra), fato_do_jogo: detalhesParaIA, tweets_ia: tweets }]);
+        // Fato_do_jogo agora salva os dados numéricos de verdade blindando a estrutura!
+        await window.meuSupabase.from('partidas').insert([{ carreira_id: carreiraAtualId, adversario: adv, gols_pro: parseInt(pro), gols_contra: parseInt(contra), fato_do_jogo: fatoJson, tweets_ia: tweets }]);
         
         if (agendaAtual.length > 0 && agendaAtual[0].adversario === adv) {
             const jogoDeletado = agendaAtual[0];
@@ -173,7 +345,8 @@ window.salvarPartida = async function() {
         document.getElementById('feed-social').innerHTML = `<div class="bg-slate-800 p-4 rounded-xl shadow-lg border border-slate-700 mb-3"><p class="font-bold text-sm text-blue-400 mb-1"><i class="fa-solid fa-pen-nib"></i> @jornalista_ia</p><p class="text-sm text-gray-200">${tweets.jornalista}</p></div>`;
         
         document.getElementById('golsPro').value = "0"; document.getElementById('golsContra').value = "0";
-        document.getElementById('marcadores').value = ""; document.getElementById('assistencias').value = "";
+        document.getElementById('containerGols').innerHTML = '<div class="flex gap-2"><input type="text" list="listaElencoFixo" placeholder="Jogador" class="flex-1 bg-slate-700 rounded-lg p-2.5 text-white text-sm outline-none"><input type="number" min="1" value="1" class="w-14 bg-slate-700 rounded-lg p-2.5 text-white text-sm outline-none text-center"><button type="button" onclick="this.parentElement.remove()" class="text-red-500 px-1 hover:text-red-400"><i class="fa-solid fa-trash"></i></button></div>';
+        document.getElementById('containerAssists').innerHTML = '<div class="flex gap-2"><input type="text" list="listaElencoFixo" placeholder="Jogador" class="flex-1 bg-slate-700 rounded-lg p-2.5 text-white text-sm outline-none"><input type="number" min="1" value="1" class="w-14 bg-slate-700 rounded-lg p-2.5 text-white text-sm outline-none text-center"><button type="button" onclick="this.parentElement.remove()" class="text-red-500 px-1 hover:text-red-400"><i class="fa-solid fa-trash"></i></button></div>';
         document.getElementById('amarelos').value = ""; document.getElementById('vermelhos').value = "";
         document.getElementById('lesoes').value = ""; document.getElementById('fatoDoJogo').value = "";
         

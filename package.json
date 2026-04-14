@@ -1,0 +1,12 @@
+{
+  "name": "mrcarrer",
+  "version": "1.0.0",
+  "description": "App de gestão esportiva com VAR e Gemini IA",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vercel dev"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.21.0"
+  }
+}
