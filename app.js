@@ -302,10 +302,10 @@ window.carregarRankings = async function() {
                     <div>
                         <div class="flex items-center gap-2 mb-0.5">
                             <span class="text-[9px] font-bold bg-zinc-800 px-1.5 py-0.5 rounded text-zinc-400 border border-zinc-700 uppercase tracking-widest">${jogador.posicao || 'N/A'}</span>
-                            <span class="text-[10px] font-bold text-zinc-600 ml-1">👕 ${jogador.partidas_jogadas || 0} J</span>
                             <span class="text-[10px] text-zinc-500 ml-1" title="Moral: ${jogador.moral}">Moral: ${moralIcon}</span>
                         </div>
-                        <h4 class="font-bold text-zinc-100 mt-1">${jogador.nome}</h4>
+                        <h4 class="font-bold text-zinc-100 mt-1 mb-1.5">${jogador.nome}</h4>
+                        <span class="text-[10px] font-bold tracking-widest uppercase bg-slate-800 text-zinc-300 border border-slate-700 px-2 py-1 rounded inline-flex items-center gap-1"><i class="fa-solid fa-shirt text-zinc-500"></i> ${jogador.partidas_jogadas || 0} Jogos</span>
                     </div>
                     <div class="flex gap-2 text-[10px] bg-zinc-950 border border-zinc-800 px-2 py-1 rounded-md text-zinc-400 font-semibold h-fit">
                         <span title="Gols Marcados"><i class="fa-solid fa-bullseye text-zinc-600 mr-0.5"></i> ${jStats.gols}</span>
@@ -678,13 +678,16 @@ window.salvarNovoJogador = async function() {
             posicao: pos,
             energia: 100,
             moral: 'Boa',
-            partidas_jogadas: 0,
-            // A coluna "camisa" não foi obrigatória no setup original, mas enviaremos se a tabela Supabase tiver permissão. Não enviarei pra evitar erro de schema. O usuário apenas pediu para testar na view.
+            partidas_jogadas: 0
         }]);
         
         document.getElementById('novoJogNome').value = '';
         fecharModal('modal-jogador');
-        carregarElenco();
+        
+        // Sincronizando visual components pós assinaturas
+        await window.carregarElenco();
+        if(window.popularSeletorSúmula) window.popularSeletorSúmula();
+        
     } catch(e) { alert("Erro ao assinar com jogador"); }
     finally { document.getElementById('btnSaveJogador').innerText = "Contratar"; }
 }
