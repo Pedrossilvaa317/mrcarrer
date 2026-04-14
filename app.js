@@ -5,11 +5,25 @@ var carreiraAtualId = null;
 var agendaAtual = [];
 var elencoFixo = [];
 
+window.verificarSessao = function() {
+    const savedId = localStorage.getItem('smc_carreira_id');
+    if (savedId) {
+        carreiraAtualId = savedId;
+        iniciarApp();
+    } else {
+        document.getElementById('tela-cadastro').classList.remove('hidden');
+        document.getElementById('btnSair').classList.add('hidden');
+        document.getElementById('barraNavegacao').classList.add('hidden');
+        if(window.carregarCarreirasSalvas) window.carregarCarreirasSalvas();
+    }
+}
+
 async function iniciarApp() {
     try {
-        const { data } = await window.meuSupabase.from('carreiras').select('*').order('criado_em', { ascending: false }).limit(1).single();
+        const { data } = await window.meuSupabase.from('carreiras').select('*').eq('id', carreiraAtualId).single();
         if (data) {
-            carreiraAtualId = data.id;
+            document.getElementById('tela-cadastro').classList.add('hidden');
+            document.getElementById('btnSair').classList.remove('hidden');
             document.getElementById('barraNavegacao').classList.remove('hidden');
             
             // Abastecer o Perfil com Case Tratado Estilisticamente
@@ -22,9 +36,71 @@ async function iniciarApp() {
             carregarAgenda(); 
             carregarRankings(); // CARREGA O RANKING AO ABRIR O APP
         } else {
-            window.mudarTela('cadastro', 'Assinar Contrato', 'fa-id-card');
+            fazerLogout();
         }
-    } catch (e) { window.mudarTela('cadastro', 'Assinar Contrato', 'fa-id-card'); }
+    } catch (e) { fazerLogout(); }
+}
+
+window.setAbaCadastro = function(aba) {
+    const btnNova = document.getElementById('btnTabNova');
+    const btnCarr = document.getElementById('btnTabCarregar');
+    
+    if(aba === 'nova') {
+        document.getElementById('tabNovaCarreira').classList.remove('hidden');
+        document.getElementById('tabCarregarCarreira').classList.add('hidden');
+        
+        btnNova.classList.replace('text-zinc-500', 'text-zinc-100');
+        btnNova.classList.replace('hover:text-zinc-300', 'bg-zinc-800');
+        
+        btnCarr.classList.replace('bg-zinc-800', 'hover:text-zinc-300');
+        btnCarr.classList.replace('text-zinc-100', 'text-zinc-500');
+    } else {
+        document.getElementById('tabNovaCarreira').classList.add('hidden');
+        document.getElementById('tabCarregarCarreira').classList.remove('hidden');
+        
+        btnCarr.classList.replace('hover:text-zinc-300', 'bg-zinc-800');
+        btnCarr.classList.replace('text-zinc-500', 'text-zinc-100');
+        
+        btnNova.classList.replace('bg-zinc-800', 'hover:text-zinc-300');
+        btnNova.classList.replace('text-zinc-100', 'text-zinc-500');
+    }
+}
+
+window.carregarCarreirasSalvas = async function() {
+    try {
+        const container = document.getElementById('listaCarreirasSalvas');
+        const { data, error } = await window.meuSupabase.from('carreiras').select('*').order('criado_em', { ascending: false });
+        if(error) throw error;
+        
+        if(!data || data.length === 0) {
+            container.innerHTML = '<p class="text-xs text-zinc-600 text-center py-4">Nenhum save encontrado na nuvem.</p>';
+            return;
+        }
+        
+        let html = '';
+        data.forEach(c => {
+            html += `
+            <div onclick="entrarNaCarreira('${c.id}')" class="bg-zinc-950 p-4 rounded-xl border border-zinc-800 hover:border-zinc-500 cursor-pointer transition flex justify-between items-center group mb-2">
+                <div>
+                    <p class="text-sm font-bold text-zinc-100 group-hover:text-emerald-500 transition uppercase tracking-tight">${c.clube}</p>
+                    <p class="text-[10px] text-zinc-500 font-semibold tracking-widest uppercase mt-0.5">${c.treinador}</p>
+                </div>
+                <i class="fa-solid fa-cloud-arrow-down text-lg text-zinc-600 group-hover:text-emerald-500 transition"></i>
+            </div>`;
+        });
+        container.innerHTML = html;
+        
+    } catch(e) { console.error(e); }
+}
+
+window.entrarNaCarreira = function(id) {
+    localStorage.setItem('smc_carreira_id', id);
+    location.reload();
+}
+
+window.fazerLogout = function() {
+    localStorage.removeItem('smc_carreira_id');
+    location.reload();
 }
 
 window.atualizarHomeDashboard = function(carreira) {
@@ -538,13 +614,17 @@ window.criarCarreira = async function() {
     if(!nome || !clube) return alert("Preencha o seu nome e o clube!");
     try {
         const { data } = await window.meuSupabase.from('carreiras').insert([{ treinador: nome, clube: clube }]).select().single();
-        carreiraAtualId = data.id; 
+        carreiraAtualId = data.id;
+        localStorage.setItem('smc_carreira_id', data.id);
+        
         window.atualizarHomeDashboard(data);
-        document.getElementById('barraNavegacao').classList.remove('hidden'); window.mudarTela('home', 'Home', 'fa-home');
+        document.getElementById('tela-cadastro').classList.add('hidden');
+        document.getElementById('barraNavegacao').classList.remove('hidden'); 
+        document.getElementById('btnSair').classList.remove('hidden');
+        
+        window.mudarTela('home', 'Home', 'fa-home');
         iniciarApp(); // Roda a master para dar o sync final
     } catch(e) {}
 }
 
-
-
-iniciarApp();
+window.verificarSessao();
