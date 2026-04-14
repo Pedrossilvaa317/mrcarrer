@@ -1,0 +1,16 @@
+{
+  "name": "Super Modo Carreira",
+  "short_name": "Carreira",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#b91c1c",
+  "description": "Simulador, Súmula e Central do Modo Carreira E-Sports.",
+  "icons": [
+    {
+      "src": "icon-512x512.png",
+      "sizes": "192x192 512x512",
+      "type": "image/png"
+    }
+  ]
+}
