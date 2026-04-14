@@ -18,7 +18,7 @@ export default async function handler(req, res) {
         if (!imagemBase64) return res.status(400).json({ error: 'Imagem não fornecida' });
 
         const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
 
         const prompt = `
 Você é um especialista em análise de estatísticas de futebol (escaneamento de Súmulas/Telas de Fim de Jogo de eSports, como EA FC / FIFA).
