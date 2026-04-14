@@ -5,10 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Super Modo Carreira</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <meta name="theme-color" content="#b91c1c">
+    <meta name="theme-color" content="#09090b"> <!-- zinc-950 -->
     <link rel="manifest" href="manifest.json">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                }
+            }
+        }
+    </script>
     <style>
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
@@ -20,160 +32,171 @@
         }
     </style>
 </head>
-<body class="bg-slate-900 text-white font-sans min-h-screen pb-20">
+<body class="bg-zinc-950 text-zinc-100 font-sans min-h-screen pb-20 selection:bg-zinc-800">
 
-    <header class="bg-red-700 p-4 shadow-lg sticky top-0 z-50">
-        <h1 id="tituloTela" class="text-lg font-bold text-center uppercase tracking-widest italic flex items-center justify-center gap-2">
-            <i class="fa-solid fa-power-off text-xl"></i> Iniciando Conexão...
+    <header class="bg-zinc-950/80 backdrop-blur-md border-b border-zinc-900 p-4 sticky top-0 z-50">
+        <h1 id="tituloTela" class="text-sm font-semibold text-center tracking-widest text-zinc-300 uppercase flex items-center justify-center gap-2">
+            <i class="fa-solid fa-power-off text-base"></i> Iniciando Conexão
         </h1>
     </header>
 
     <main class="max-w-md mx-auto px-4 mt-6">
         
         <div id="tela-cadastro" class="tab-content hidden space-y-6">
-            <div class="text-center mb-6">
-                <i class="fa-solid fa-id-card text-5xl text-red-500 mb-3 drop-shadow-lg"></i>
-                <h2 class="text-xl font-black uppercase">Novo Save</h2>
-                <p class="text-xs text-gray-400 mt-1">Configure o seu perfil de Treinador</p>
+            <div class="text-center mb-6 mt-4">
+                <i class="fa-solid fa-folder-open text-4xl text-zinc-400 mb-3 drop-shadow-sm"></i>
+                <h2 class="text-xl font-bold uppercase tracking-tight text-zinc-100">Novo Save</h2>
+                <p class="text-xs text-zinc-500 mt-1">Configure o Data Hub do Treinador</p>
             </div>
-            <section class="bg-slate-800 p-6 rounded-xl shadow-xl border-t-4 border-red-500 space-y-4">
-                <div><label class="block text-xs font-bold text-gray-400 uppercase mb-1">Nome do Treinador</label><input type="text" id="novoNome" placeholder="Ex: PC" class="w-full bg-slate-700 border-none rounded-lg p-3 text-white outline-none font-bold"></div>
+            <section class="bg-zinc-900 p-6 rounded-2xl border border-zinc-800 space-y-4 shadow-xl">
                 <div>
-                    <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Clube</label>
-                    <input type="text" id="novoClube" list="listaClubes" placeholder="Digite ou selecione..." class="w-full bg-slate-700 border-none rounded-lg p-3 text-white outline-none font-bold">
+                    <label class="block text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-1.5">Nome do Treinador</label>
+                    <input type="text" id="novoNome" placeholder="Ex: PC" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3.5 text-zinc-100 outline-none focus:border-zinc-600 transition text-sm font-medium">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-1.5">Clube Base</label>
+                    <input type="text" id="novoClube" list="listaClubes" placeholder="Digite ou selecione..." class="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3.5 text-zinc-100 outline-none focus:border-zinc-600 transition text-sm font-medium">
                     <datalist id="listaClubes"><option value="Vasco da Gama"></option><option value="Flamengo"></option></datalist>
                 </div>
             </section>
-            <button onclick="criarCarreira()" class="w-full bg-green-600 active:bg-green-800 text-white font-black py-4 rounded-2xl uppercase tracking-widest shadow-lg transition transform active:scale-95">Assinar Contrato 🖋️</button>
+            <button onclick="criarCarreira()" class="w-full bg-zinc-100 hover:bg-white text-zinc-950 font-bold py-4 rounded-xl uppercase tracking-widest shadow-lg transition transform active:scale-95 text-sm">Assinar Contrato</button>
         </div>
 
         <div id="tela-dashboard" class="tab-content hidden space-y-6">
-            <div class="bg-slate-800 p-5 rounded-xl shadow-xl relative overflow-hidden border-t-4 border-red-600">
-                <div class="absolute top-0 right-0 w-32 h-32 bg-red-600/10 rounded-full -mr-10 -mt-10 blur-2xl"></div>
+            <div class="bg-zinc-900 p-5 rounded-2xl border border-zinc-800 relative overflow-hidden shadow-xl">
                 <div class="flex items-center gap-4">
-                    <div class="w-16 h-16 bg-slate-700 rounded-full border-2 border-red-500 flex items-center justify-center text-2xl text-gray-400 z-10"><i class="fa-solid fa-user-tie text-white"></i></div>
+                    <div class="w-14 h-14 bg-zinc-950 rounded-full border border-zinc-800 flex items-center justify-center text-xl text-zinc-500 z-10"><i class="fa-regular fa-user"></i></div>
                     <div class="z-10 flex-1">
-                        <h2 id="dashNomeTreinador" class="text-xl font-black uppercase tracking-wider">Carregando...</h2>
-                        <p id="dashNomeClube" class="text-sm text-red-400 font-bold">Buscando Clube...</p>
+                        <h2 id="dashNomeTreinador" class="text-lg font-bold uppercase tracking-wide text-zinc-100">Carregando...</h2>
+                        <p id="dashNomeClube" class="text-xs text-zinc-400 font-medium">Buscando Clube...</p>
                     </div>
                 </div>
-                <div class="mt-4 pt-4 border-t border-slate-700 flex justify-between text-center divide-x divide-slate-600">
-                    <div class="flex-1"><p id="statVitorias" class="text-2xl font-black text-green-400">0</p><p class="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Vitórias</p></div>
-                    <div class="flex-1"><p id="statEmpates" class="text-2xl font-black text-gray-300">0</p><p class="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Empates</p></div>
-                    <div class="flex-1"><p id="statDerrotas" class="text-2xl font-black text-red-500">0</p><p class="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Derrotas</p></div>
+                <div class="mt-5 pt-4 border-t border-zinc-800/50 flex justify-between text-center divide-x divide-zinc-800/50">
+                    <div class="flex-1"><p id="statVitorias" class="text-2xl font-bold text-emerald-500">0</p><p class="text-[10px] text-zinc-500 font-semibold tracking-wider mt-0.5">VITÓRIAS</p></div>
+                    <div class="flex-1"><p id="statEmpates" class="text-2xl font-bold text-zinc-400">0</p><p class="text-[10px] text-zinc-500 font-semibold tracking-wider mt-0.5">EMPATES</p></div>
+                    <div class="flex-1"><p id="statDerrotas" class="text-2xl font-bold text-rose-500">0</p><p class="text-[10px] text-zinc-500 font-semibold tracking-wider mt-0.5">DERROTAS</p></div>
                 </div>
             </div>
 
             <div>
-                 <h3 class="text-xs font-bold text-gray-400 uppercase mb-3 px-1 flex items-center gap-2"><i class="fa-solid fa-bolt text-red-400"></i> Próximo Desafio</h3>
-                 <button id="btnSumulaHome" onclick="mudarTela('sumula', 'Súmula do Jogo', 'fa-clipboard-list')" class="w-full bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold py-4 rounded-xl uppercase tracking-widest transition flex justify-center items-center gap-2">Preencher Súmula <i class="fa-solid fa-arrow-right"></i></button>
+                 <h3 class="text-[11px] font-semibold text-zinc-500 tracking-wider mb-3 px-1 flex items-center gap-2"><i class="fa-solid fa-flag text-zinc-600"></i> PRÓXIMO FIXTURE</h3>
+                 <button id="btnSumulaHome" onclick="mudarTela('sumula', 'Nova Súmula', 'fa-clipboard')" class="w-full bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 text-xs font-semibold py-4 rounded-xl uppercase tracking-widest transition flex justify-between items-center px-6">
+                    <span>Preencher Súmula</span>
+                    <i class="fa-solid fa-chevron-right text-zinc-600"></i>
+                 </button>
             </div>
         </div>
 
         <div id="tela-sumula" class="tab-content hidden space-y-4">
-            <section class="bg-slate-800 p-5 rounded-xl border-t-4 border-red-500 shadow-xl">
-                <h2 class="text-[10px] font-bold text-red-400 uppercase mb-3 flex items-center gap-2">1. Info Básica</h2>
-                <input type="text" id="adversario" placeholder="Adversário" class="bg-transparent border-b border-slate-700 text-white font-bold w-full outline-none text-lg pb-2 mb-4">
-                <div class="flex items-center justify-between gap-2 text-center">
-                    <div class="flex-1"><label class="block text-[10px] text-gray-400 font-bold mb-1">NOSSO TIME</label><input type="number" id="golsPro" value="0" class="w-full bg-slate-700 text-3xl font-black rounded-xl py-2 outline-none text-center"></div>
-                    <div class="text-2xl font-bold text-gray-500">X</div>
-                    <div class="flex-1"><label class="block text-[10px] text-gray-400 font-bold uppercase mb-1">ADV</label><input type="number" id="golsContra" value="0" class="w-full bg-slate-700 text-3xl font-black rounded-xl py-2 outline-none text-center"></div>
+            <section class="bg-zinc-900 p-5 rounded-2xl border border-zinc-800 shadow-xl">
+                <h2 class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-4 flex items-center gap-2">1. Geral</h2>
+                <input type="text" id="adversario" placeholder="Digite o Adversário" class="bg-transparent border-b border-zinc-800 text-zinc-100 font-semibold w-full outline-none text-lg pb-2.5 mb-5 focus:border-zinc-500 transition">
+                <div class="flex items-center justify-between gap-4 text-center">
+                    <div class="flex-1">
+                        <label class="block text-[10px] text-zinc-500 font-bold tracking-widest mb-1.5">NOSSO TIME</label>
+                        <input type="number" id="golsPro" value="0" class="w-full bg-zinc-950 border border-zinc-800 text-3xl font-bold rounded-xl py-2 outline-none text-center focus:border-zinc-600 transition">
+                    </div>
+                    <div class="text-lg font-bold text-zinc-600 mt-4">X</div>
+                    <div class="flex-1">
+                        <label class="block text-[10px] text-zinc-500 font-bold tracking-widest mb-1.5">VISITANTE</label>
+                        <input type="number" id="golsContra" value="0" class="w-full bg-zinc-950 border border-zinc-800 text-3xl font-bold rounded-xl py-2 outline-none text-center focus:border-zinc-600 transition">
+                    </div>
                 </div>
             </section>
 
-            <section class="bg-slate-800 p-5 rounded-xl shadow-xl border-l-4 border-green-500">
-                <h2 class="text-[10px] font-bold text-green-400 uppercase mb-3 flex items-center gap-2">2. O Mapa da Mina</h2>
-                <div class="space-y-3">
+            <section class="bg-zinc-900 p-5 rounded-2xl shadow-xl border border-zinc-800">
+                <h2 class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-4 flex items-center gap-2">2. Eventos Chave</h2>
+                <div class="space-y-5">
                     <div>
-                        <label class="flex justify-between items-center text-[10px] text-gray-400 font-bold uppercase mb-1">
-                            <span><i class="fa-solid fa-futbol"></i> Gols</span>
-                            <button type="button" onclick="adicionarLinhaGol()" class="text-green-400 hover:text-green-300 text-[10px] flex items-center gap-1"><i class="fa-solid fa-plus"></i> Add</button>
+                        <label class="flex justify-between items-center text-[10px] text-zinc-400 font-bold uppercase mb-2 tracking-widest">
+                            <span>Marcadores</span>
+                            <button type="button" onclick="adicionarLinhaGol()" class="text-zinc-400 hover:text-zinc-200 text-[10px] flex items-center gap-1 bg-zinc-800 px-2 py-1 rounded"><i class="fa-solid fa-plus"></i></button>
                         </label>
                         <div id="containerGols" class="space-y-2">
                             <div class="flex gap-2">
-                                <input type="text" list="listaElencoFixo" placeholder="Jogador" class="flex-1 bg-slate-700 rounded-lg p-2.5 text-white text-sm outline-none">
-                                <input type="number" min="1" value="1" class="w-14 bg-slate-700 rounded-lg p-2.5 text-white text-sm outline-none text-center">
-                                <button type="button" onclick="this.parentElement.remove()" class="text-red-500 px-1 hover:text-red-400"><i class="fa-solid fa-trash"></i></button>
+                                <input type="text" list="listaElencoFixo" placeholder="Nome do Jogador" class="flex-1 bg-zinc-950 border border-zinc-800 rounded-lg p-2.5 text-zinc-200 text-sm outline-none focus:border-zinc-600">
+                                <input type="number" min="1" value="1" class="w-14 bg-zinc-950 border border-zinc-800 rounded-lg p-2.5 text-zinc-200 text-sm outline-none text-center focus:border-zinc-600">
+                                <button type="button" onclick="this.parentElement.remove()" class="text-zinc-600 px-1 hover:text-rose-500 transition"><i class="fa-solid fa-xmark"></i></button>
                             </div>
                         </div>
                     </div>
                     <div>
-                        <label class="flex justify-between items-center text-[10px] text-gray-400 font-bold uppercase mb-1">
-                            <span><i class="fa-solid fa-shoe-prints"></i> Assistências</span>
-                            <button type="button" onclick="adicionarLinhaAssist()" class="text-blue-400 hover:text-blue-300 text-[10px] flex items-center gap-1"><i class="fa-solid fa-plus"></i> Add</button>
+                        <label class="flex justify-between items-center text-[10px] text-zinc-400 font-bold uppercase mb-2 tracking-widest">
+                            <span>Assistências</span>
+                            <button type="button" onclick="adicionarLinhaAssist()" class="text-zinc-400 hover:text-zinc-200 text-[10px] flex items-center gap-1 bg-zinc-800 px-2 py-1 rounded"><i class="fa-solid fa-plus"></i></button>
                         </label>
                         <div id="containerAssists" class="space-y-2">
                             <div class="flex gap-2">
-                                <input type="text" list="listaElencoFixo" placeholder="Jogador" class="flex-1 bg-slate-700 rounded-lg p-2.5 text-white text-sm outline-none">
-                                <input type="number" min="1" value="1" class="w-14 bg-slate-700 rounded-lg p-2.5 text-white text-sm outline-none text-center">
-                                <button type="button" onclick="this.parentElement.remove()" class="text-red-500 px-1 hover:text-red-400"><i class="fa-solid fa-trash"></i></button>
+                                <input type="text" list="listaElencoFixo" placeholder="Nome do Jogador" class="flex-1 bg-zinc-950 border border-zinc-800 rounded-lg p-2.5 text-zinc-200 text-sm outline-none focus:border-zinc-600">
+                                <input type="number" min="1" value="1" class="w-14 bg-zinc-950 border border-zinc-800 rounded-lg p-2.5 text-zinc-200 text-sm outline-none text-center focus:border-zinc-600">
+                                <button type="button" onclick="this.parentElement.remove()" class="text-zinc-600 px-1 hover:text-rose-500 transition"><i class="fa-solid fa-xmark"></i></button>
                             </div>
                         </div>
                     </div>
                 </div>
             </section>
 
-            <section class="bg-slate-800 p-5 rounded-xl shadow-xl border-l-4 border-yellow-500">
-                <h2 class="text-[10px] font-bold text-yellow-400 uppercase mb-3 flex items-center gap-2">3. Disciplina e Saúde</h2>
+            <section class="bg-zinc-900 p-5 rounded-2xl shadow-xl border border-zinc-800">
+                <h2 class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-4 flex items-center gap-2">3. Ocorrências</h2>
                 <div class="space-y-3">
                     <div class="flex gap-3">
-                        <div class="flex-1"><label class="block text-[10px] text-gray-400 font-bold uppercase mb-1">🟨 Amarelos</label><input type="text" id="amarelos" list="listaElencoFixo" class="w-full bg-slate-700 rounded-lg p-2 text-white text-xs outline-none"></div>
-                        <div class="flex-1"><label class="block text-[10px] text-gray-400 font-bold uppercase mb-1">🟥 Vermelhos</label><input type="text" id="vermelhos" list="listaElencoFixo" class="w-full bg-slate-700 rounded-lg p-2 text-white text-xs outline-none"></div>
+                        <div class="flex-1"><label class="block text-[10px] text-amber-500/80 font-bold uppercase mb-1 tracking-widest">Amarelos</label><input type="text" id="amarelos" list="listaElencoFixo" class="w-full bg-zinc-950 border border-zinc-800 focus:border-zinc-600 transition rounded-lg p-2.5 text-zinc-200 text-xs outline-none"></div>
+                        <div class="flex-1"><label class="block text-[10px] text-rose-500/80 font-bold uppercase mb-1 tracking-widest">Vermelhos</label><input type="text" id="vermelhos" list="listaElencoFixo" class="w-full bg-zinc-950 border border-zinc-800 focus:border-zinc-600 transition rounded-lg p-2.5 text-zinc-200 text-xs outline-none"></div>
                     </div>
-                    <div><label class="block text-[10px] text-gray-400 font-bold uppercase mb-1">🚑 Lesões</label><input type="text" id="lesoes" list="listaElencoFixo" class="w-full bg-slate-700 rounded-lg p-2 text-white text-xs outline-none"></div>
+                    <div><label class="block text-[10px] text-zinc-400 font-bold uppercase mb-1 tracking-widest">Lesões / D.M.</label><input type="text" id="lesoes" list="listaElencoFixo" class="w-full bg-zinc-950 border border-zinc-800 focus:border-zinc-600 transition rounded-lg p-2.5 text-zinc-200 text-xs outline-none"></div>
                 </div>
             </section>
 
-            <section class="bg-slate-800 p-5 rounded-xl shadow-xl border-l-4 border-blue-500">
-                <h2 class="text-[10px] font-bold text-blue-400 uppercase mb-3 flex items-center gap-2">4. O "Fato do Jogo"</h2>
-                <textarea id="fatoDoJogo" rows="3" placeholder="Sua visão tática..." class="w-full bg-slate-700 border-none rounded-lg p-3 text-white outline-none text-sm"></textarea>
+            <section class="bg-zinc-900 p-5 rounded-2xl shadow-xl border border-zinc-800">
+                <h2 class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-3 flex items-center gap-2">4. Relatório Técnico</h2>
+                <textarea id="fatoDoJogo" rows="3" placeholder="Sintetize a performance tática do jogo..." class="w-full bg-zinc-950 border border-zinc-800 focus:border-zinc-600 transition rounded-lg p-3 text-zinc-200 outline-none text-sm leading-relaxed resiz-none"></textarea>
             </section>
 
-            <button id="btnSalvar" onclick="salvarPartida()" class="w-full bg-red-600 text-white font-bold py-4 rounded-2xl uppercase tracking-widest shadow-lg mt-2 mb-4">Salvar e Coletiva 🎙️</button>
+            <button id="btnSalvar" onclick="salvarPartida()" class="w-full bg-zinc-100 text-zinc-950 hover:bg-white transition font-bold py-4 rounded-xl uppercase tracking-widest shadow-lg mt-2 mb-4 text-sm">Registrar & IA Feedback</button>
         </div>
 
         <div id="tela-calendario" class="tab-content hidden space-y-4">
-            <h3 class="text-xs font-bold text-gray-400 uppercase mt-2 mb-2 px-1 flex items-center gap-2"><i class="fa-solid fa-calendar text-white"></i> Calendário da Temporada</h3>
-            <div id="listaAgenda" class="space-y-3"><div class="text-center p-10 text-gray-400 text-xs bg-slate-800 rounded-xl border border-dashed border-slate-600">Buscando jogos na base...</div></div>
+            <h3 class="text-[11px] font-semibold text-zinc-500 tracking-wider mt-2 mb-3 px-1 flex items-center gap-2"><i class="fa-regular fa-calendar"></i> FIXTURES DA TEMPORADA</h3>
+            <div id="listaAgenda" class="space-y-2"><div class="text-center p-10 text-zinc-600 text-xs bg-zinc-900 rounded-xl border border-dashed border-zinc-800">Sincronizando banco de dados...</div></div>
         </div>
 
         <div id="tela-social" class="tab-content hidden space-y-4">
-            <div class="bg-blue-900/30 p-4 rounded-xl border border-blue-500 shadow-xl mb-4">
-                <h3 class="font-bold text-blue-400 text-[11px] mb-3 uppercase flex items-center gap-2"><i class="fa-solid fa-twitter"></i> FEED DA IMPRENSA</h3>
-                <div id="feed-social" class="space-y-3">
-                    <p class="text-xs text-gray-500 italic text-center py-2">O telefone está quieto... Salve uma súmula para ver repercussões.</p>
+            <div class="bg-zinc-900 p-5 rounded-2xl border border-zinc-800 shadow-xl mb-4">
+                <h3 class="font-bold text-zinc-400 text-[10px] tracking-widest mb-3 uppercase flex items-center gap-2 border-b border-zinc-800/50 pb-2"><i class="fa-regular fa-newspaper"></i> Visão da Imprensa</h3>
+                <div id="feed-social" class="space-y-4 mt-3">
+                    <p class="text-xs text-zinc-600 text-center py-4">Salve um jogo para gerar repercussões na mídia.</p>
                 </div>
             </div>
             
-            <div class="bg-amber-900/30 p-5 rounded-xl border border-amber-600 shadow-xl relative">
-                <div class="absolute -top-3 right-4 bg-amber-500 text-black text-[9px] font-bold px-2 py-0.5 rounded-full rotate-3 shadow-md">CONFIDENCIAL TÁTICA</div>
-                <h3 class="font-bold text-amber-500 text-[11px] mb-3 uppercase flex items-center gap-2"><i class="fa-solid fa-clipboard-list"></i> PRANCHETA DO AUXILIAR</h3>
-                <div id="feed-auxiliar" class="text-sm text-gray-200">
-                    <p class="text-xs text-gray-500 italic font-mono text-center py-2">- Aguardando final de jogo para emitir relatório técnico -</p>
+            <div class="bg-zinc-900 p-5 rounded-2xl border border-zinc-800 shadow-xl relative">
+                <div class="absolute -top-2.5 right-4 bg-zinc-800 text-zinc-300 text-[8px] font-bold px-2 py-0.5 rounded shadow-sm tracking-widest border border-zinc-700">TÁTICO</div>
+                <h3 class="font-bold text-zinc-400 text-[10px] tracking-widest mb-3 uppercase flex items-center gap-2 border-b border-zinc-800/50 pb-2"><i class="fa-solid fa-chart-line"></i> Relatório do Auxiliar</h3>
+                <div id="feed-auxiliar" class="text-sm text-zinc-300 mt-3">
+                    <p class="text-xs text-zinc-600 text-center py-4">O auxiliar técnico submeterá a análise após o apito final.</p>
                 </div>
             </div>
         </div>
 
         <div id="tela-elenco" class="tab-content hidden space-y-4">
             
-            <div class="bg-slate-800 p-5 rounded-xl shadow-xl border-t-4 border-green-500">
-                <h3 class="text-xs font-bold text-gray-400 uppercase mb-3 flex items-center gap-2"><i class="fa-solid fa-futbol text-green-400"></i> Top Artilheiros</h3>
+            <div class="bg-zinc-900 p-5 rounded-xl shadow-xl border border-zinc-800">
+                <h3 class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-3 flex items-center gap-2"><i class="fa-solid fa-bullseye text-zinc-400"></i> Artilharia</h3>
                 <div id="rankingGols" class="space-y-2">
-                    <div class="text-center p-6 text-gray-500 text-xs">Carregando estatísticas...</div>
+                    <div class="text-center p-6 text-zinc-600 text-xs">Apurando métricas...</div>
                 </div>
             </div>
 
-            <div class="bg-slate-800 p-5 rounded-xl shadow-xl border-t-4 border-blue-500">
-                <h3 class="text-xs font-bold text-gray-400 uppercase mb-3 flex items-center gap-2"><i class="fa-solid fa-shoe-prints text-blue-400"></i> Top Garçons</h3>
+            <div class="bg-zinc-900 p-5 rounded-xl shadow-xl border border-zinc-800">
+                <h3 class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-3 flex items-center gap-2"><i class="fa-solid fa-share-nodes text-zinc-400"></i> Assistências</h3>
                 <div id="rankingAssists" class="space-y-2">
-                    <div class="text-center p-6 text-gray-500 text-xs">Carregando estatísticas...</div>
+                    <div class="text-center p-6 text-zinc-600 text-xs">Apurando métricas...</div>
                 </div>
             </div>
 
-            <div class="bg-slate-800 p-5 rounded-xl shadow-xl border-t-4 border-white mt-4">
-                <h3 class="text-xs font-bold text-gray-400 uppercase mb-3 flex items-center gap-2"><i class="fa-solid fa-users text-white"></i> Plantel Completo</h3>
-                <div id="listaElencoDisplay" class="space-y-2 divide-y divide-slate-700">
-                    <div class="text-center p-6 text-gray-500 text-xs">Carregando elenco...</div>
+            <div class="bg-zinc-900 p-5 rounded-xl shadow-xl border border-zinc-800 mt-4">
+                <h3 class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-3 flex items-center gap-2"><i class="fa-solid fa-users text-zinc-400"></i> Plantel Completo</h3>
+                <div id="listaElencoDisplay" class="space-y-2 divide-y divide-zinc-800">
+                    <div class="text-center p-6 text-zinc-600 text-xs">Sincronizando jogadores...</div>
                 </div>
             </div>
 
@@ -181,13 +204,13 @@
 
     </main>
 
-    <nav id="barraNavegacao" class="hidden bg-slate-900 border-t border-slate-800 fixed bottom-0 w-full px-2 py-3 z-50">
+    <nav id="barraNavegacao" class="hidden bg-zinc-950/90 backdrop-blur border-t border-zinc-900 fixed bottom-0 w-full px-2 py-2.5 z-50">
         <div class="max-w-md mx-auto flex justify-between items-center">
-            <button onclick="mudarTela('dashboard', 'Visão Geral', 'fa-house')" class="nav-btn active w-1/5 flex flex-col items-center gap-1 text-red-500"><i class="fa-solid fa-house text-lg mb-1"></i><span class="text-[9px] font-bold uppercase tracking-wider">Home</span></button>
-            <button onclick="mudarTela('sumula', 'Súmula do Jogo', 'fa-clipboard-list')" class="nav-btn w-1/5 flex flex-col items-center gap-1 text-gray-500"><i class="fa-solid fa-clipboard-list text-lg mb-1"></i><span class="text-[9px] font-bold uppercase tracking-wider">Súmula</span></button>
-            <button onclick="mudarTela('calendario', 'Calendário', 'fa-calendar-days')" class="nav-btn w-1/5 flex flex-col items-center gap-1 text-gray-500"><i class="fa-solid fa-calendar-days text-lg mb-1"></i><span class="text-[9px] font-bold uppercase tracking-wider">Agenda</span></button>
-            <button onclick="mudarTela('social', 'Feed', 'fa-hashtag')" class="nav-btn w-1/5 flex flex-col items-center gap-1 text-gray-500"><i class="fa-solid fa-hashtag text-lg mb-1"></i><span class="text-[9px] font-bold uppercase tracking-wider">Social</span></button>
-            <button onclick="mudarTela('elenco', 'Elenco', 'fa-users')" class="nav-btn w-1/5 flex flex-col items-center gap-1 text-gray-500"><i class="fa-solid fa-users text-lg mb-1"></i><span class="text-[9px] font-bold uppercase tracking-wider">Elenco</span></button>
+            <button onclick="mudarTela('dashboard', 'Dashboard', 'fa-chart-pie')" class="nav-btn active w-1/5 flex flex-col items-center gap-1.5 text-zinc-100 transition"><i class="fa-solid fa-chart-pie text-lg"></i><span class="text-[8px] font-bold uppercase tracking-widest">Home</span></button>
+            <button onclick="mudarTela('sumula', 'Nova Súmula', 'fa-clipboard')" class="nav-btn w-1/5 flex flex-col items-center gap-1.5 text-zinc-600 hover:text-zinc-400 transition"><i class="fa-solid fa-clipboard text-lg"></i><span class="text-[8px] font-bold uppercase tracking-widest">Súmula</span></button>
+            <button onclick="mudarTela('calendario', 'Fixtures', 'fa-calendar')" class="nav-btn w-1/5 flex flex-col items-center gap-1.5 text-zinc-600 hover:text-zinc-400 transition"><i class="fa-solid fa-calendar text-lg"></i><span class="text-[8px] font-bold uppercase tracking-widest">Agenda</span></button>
+            <button onclick="mudarTela('social', 'Hub Social', 'fa-hashtag')" class="nav-btn w-1/5 flex flex-col items-center gap-1.5 text-zinc-600 hover:text-zinc-400 transition"><i class="fa-solid fa-hashtag text-lg"></i><span class="text-[8px] font-bold uppercase tracking-widest">Social</span></button>
+            <button onclick="mudarTela('elenco', 'Squad', 'fa-users')" class="nav-btn w-1/5 flex flex-col items-center gap-1.5 text-zinc-600 hover:text-zinc-400 transition"><i class="fa-solid fa-users text-lg"></i><span class="text-[8px] font-bold uppercase tracking-widest">Elenco</span></button>
         </div>
     </nav>
 
@@ -197,8 +220,8 @@
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('/sw.js')
-                .then((r) => console.log('✅ ServiceWorker de Mrcarrer registrado!'))
-                .catch((e) => console.error('❌ ServiceWorker falhou: ', e));
+                .then((r) => console.log('✅ ServiceWorker resgistrado (PWA)'))
+                .catch((e) => console.error('❌ ServiceWorker falha', e));
             });
         }
     </script>

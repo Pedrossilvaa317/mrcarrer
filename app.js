@@ -11,9 +11,8 @@ async function iniciarApp() {
         if (data) {
             carreiraAtualId = data.id;
             document.getElementById('dashNomeTreinador').innerText = data.treinador;
-            document.getElementById('dashNomeClube').innerText = data.clube;
             document.getElementById('barraNavegacao').classList.remove('hidden');
-            window.mudarTela('dashboard', 'Visão Geral', 'fa-house');
+            window.mudarTela('dashboard', 'Dashboard', 'fa-chart-pie');
             atualizarDashboard();
             await window.carregarElenco();
             window.popularSeletorSúmula();
@@ -43,8 +42,8 @@ window.popularSeletorSúmula = function() {
     } else {
         elencoFixo.forEach(jogador => {
             html += `<option value="${jogador.nome}"></option>`;
-            let pos = jogador.posicao ? `<span class="text-[9px] bg-slate-700 px-1.5 py-0.5 rounded text-gray-400 font-bold">${jogador.posicao}</span>` : '';
-            squadHtml += `<div class="py-2 flex justify-between items-center"><span class="font-bold text-sm text-gray-200">${jogador.nome}</span> ${pos}</div>`;
+            let pos = jogador.posicao ? `<span class="text-[9px] bg-zinc-800 px-1.5 py-0.5 rounded text-zinc-400 font-bold border border-zinc-700">${jogador.posicao}</span>` : '';
+            squadHtml += `<div class="py-2.5 flex justify-between items-center"><span class="font-medium text-sm text-zinc-200">${jogador.nome}</span> ${pos}</div>`;
         });
     }
     
@@ -58,14 +57,14 @@ window.popularSeletorSúmula = function() {
 window.adicionarLinhaGol = function() {
     const div = document.createElement('div');
     div.className = 'flex gap-2';
-    div.innerHTML = `<input type="text" list="listaElencoFixo" placeholder="Jogador" class="flex-1 bg-slate-700 rounded-lg p-2.5 text-white text-sm outline-none"><input type="number" min="1" value="1" class="w-14 bg-slate-700 rounded-lg p-2.5 text-white text-sm outline-none text-center"><button type="button" onclick="this.parentElement.remove()" class="text-red-500 px-1 hover:text-red-400"><i class="fa-solid fa-trash"></i></button>`;
+    div.innerHTML = `<input type="text" list="listaElencoFixo" placeholder="Nome do Jogador" class="flex-1 bg-zinc-950 border border-zinc-800 rounded-lg p-2.5 text-zinc-200 text-sm outline-none focus:border-zinc-600"><input type="number" min="1" value="1" class="w-14 bg-zinc-950 border border-zinc-800 rounded-lg p-2.5 text-zinc-200 text-sm outline-none text-center focus:border-zinc-600"><button type="button" onclick="this.parentElement.remove()" class="text-zinc-600 px-1 hover:text-rose-500 transition"><i class="fa-solid fa-xmark"></i></button>`;
     document.getElementById('containerGols').appendChild(div);
 }
 
 window.adicionarLinhaAssist = function() {
     const div = document.createElement('div');
     div.className = 'flex gap-2';
-    div.innerHTML = `<input type="text" list="listaElencoFixo" placeholder="Jogador" class="flex-1 bg-slate-700 rounded-lg p-2.5 text-white text-sm outline-none"><input type="number" min="1" value="1" class="w-14 bg-slate-700 rounded-lg p-2.5 text-white text-sm outline-none text-center"><button type="button" onclick="this.parentElement.remove()" class="text-red-500 px-1 hover:text-red-400"><i class="fa-solid fa-trash"></i></button>`;
+    div.innerHTML = `<input type="text" list="listaElencoFixo" placeholder="Nome do Jogador" class="flex-1 bg-zinc-950 border border-zinc-800 rounded-lg p-2.5 text-zinc-200 text-sm outline-none focus:border-zinc-600"><input type="number" min="1" value="1" class="w-14 bg-zinc-950 border border-zinc-800 rounded-lg p-2.5 text-zinc-200 text-sm outline-none text-center focus:border-zinc-600"><button type="button" onclick="this.parentElement.remove()" class="text-zinc-600 px-1 hover:text-rose-500 transition"><i class="fa-solid fa-xmark"></i></button>`;
     document.getElementById('containerAssists').appendChild(div);
 }
 
@@ -116,19 +115,19 @@ window.carregarRankings = async function() {
         let artilheiros = [...arrayJogadores].filter(j => j.gols > 0).sort((a, b) => b.gols - a.gols);
         let htmlGols = '';
         artilheiros.forEach((j, i) => {
-            let icone = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '<i class="fa-solid fa-futbol text-gray-500"></i>';
-            htmlGols += `<div class="flex justify-between items-center bg-slate-700 p-3 rounded-lg border-l-2 border-green-500 shadow"><span class="font-bold text-sm">${icone} ${j.nome}</span><span class="bg-green-600 text-white text-xs font-black px-2.5 py-1 rounded shadow-inner">${j.gols}</span></div>`;
+            let icone = i === 0 ? '1' : i === 1 ? '2' : i === 2 ? '3' : `<span class="text-zinc-600">${i+1}</span>`;
+            htmlGols += `<div class="flex justify-between items-center bg-zinc-950 p-3 rounded-lg border border-zinc-800 shadow-sm"><span class="font-medium text-sm text-zinc-300"><span class="mr-2 text-zinc-500 font-bold">${icone}.</span> ${j.nome}</span><span class="text-zinc-100 text-sm font-bold bg-zinc-800 px-2.5 py-0.5 rounded">${j.gols}</span></div>`;
         });
-        document.getElementById('rankingGols').innerHTML = htmlGols || '<p class="text-xs text-gray-500 text-center py-4">A rede ainda não balançou.</p>';
+        document.getElementById('rankingGols').innerHTML = htmlGols || '<p class="text-xs text-zinc-600 text-center py-4">Falta bola na rede.</p>';
 
         // Monta a tela de ASSISTÊNCIAS
         let garcons = [...arrayJogadores].filter(j => j.assists > 0).sort((a, b) => b.assists - a.assists);
         let htmlAssists = '';
         garcons.forEach((j, i) => {
-            let icone = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '<i class="fa-solid fa-shoe-prints text-gray-500"></i>';
-            htmlAssists += `<div class="flex justify-between items-center bg-slate-700 p-3 rounded-lg border-l-2 border-blue-500 shadow"><span class="font-bold text-sm">${icone} ${j.nome}</span><span class="bg-blue-600 text-white text-xs font-black px-2.5 py-1 rounded shadow-inner">${j.assists}</span></div>`;
+            let icone = i === 0 ? '1' : i === 1 ? '2' : i === 2 ? '3' : `<span class="text-zinc-600">${i+1}</span>`;
+            htmlAssists += `<div class="flex justify-between items-center bg-zinc-950 p-3 rounded-lg border border-zinc-800 shadow-sm"><span class="font-medium text-sm text-zinc-300"><span class="mr-2 text-zinc-500 font-bold">${icone}.</span> ${j.nome}</span><span class="text-zinc-100 text-sm font-bold bg-zinc-800 px-2.5 py-0.5 rounded">${j.assists}</span></div>`;
         });
-        document.getElementById('rankingAssists').innerHTML = htmlAssists || '<p class="text-xs text-gray-500 text-center py-4">Nenhum passe para gol.</p>';
+        document.getElementById('rankingAssists').innerHTML = htmlAssists || '<p class="text-xs text-zinc-600 text-center py-4">Faltam assistências.</p>';
 
     } catch(e) { console.error(e); }
 }
@@ -158,11 +157,13 @@ function renderizarListaJogos(jogos) {
 
     let html = '';
     jogos.forEach((jogo, index) => {
-        let borderClass = index === 0 ? 'border-red-500 shadow-xl' : 'border-gray-600 opacity-75';
-        let statusBadge = index === 0 ? '<span class="bg-red-600 text-white text-[9px] px-2 py-1 rounded font-black tracking-widest">PRÓXIMO</span>' : '<span class="bg-slate-700 text-gray-400 text-[9px] px-2 py-1 rounded font-black tracking-widest border border-slate-600">A JOGAR</span>';
-        html += `<div class="bg-slate-800 p-4 rounded-xl border-l-4 ${borderClass} flex justify-between items-center transition"><div><p class="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-0.5">${jogo.competicao} • ${jogo.local}</p><p class="font-black text-lg text-white">${jogo.adversario}</p></div><div>${statusBadge}</div></div>`;
+        let isFirst = index === 0;
+        let borderClass = isFirst ? 'border-zinc-600 shadow-md' : 'border-zinc-800/40 opacity-80';
+        let statusBadge = isFirst ? '<span class="bg-zinc-100 text-zinc-900 text-[9px] px-2 py-1 rounded font-bold tracking-widest">PRÓXIMO</span>' : '<span class="bg-zinc-950 text-zinc-500 text-[9px] px-2 py-1 rounded font-bold tracking-widest border border-zinc-800">PENDENTE</span>';
+        let bg = isFirst ? 'bg-zinc-900' : 'bg-zinc-900/50';
+        html += `<div class="${bg} p-4 rounded-xl border ${borderClass} flex justify-between items-center transition"><div><p class="text-[10px] text-zinc-500 font-semibold tracking-widest mb-1">${jogo.competicao} • ${jogo.local}</p><p class="font-bold text-lg text-zinc-100">${jogo.adversario}</p></div><div>${statusBadge}</div></div>`;
     });
-    document.getElementById('listaAgenda').innerHTML = html || '<div class="text-center p-10 text-gray-400 text-xs bg-slate-800 rounded-xl border border-dashed border-slate-600">Agenda vazia!</div>';
+    document.getElementById('listaAgenda').innerHTML = html || '<div class="text-center p-10 text-zinc-600 text-xs bg-zinc-900 rounded-xl border border-dashed border-zinc-800">Fixture limpo!</div>';
 }
 
 window.atualizarDashboard = async function() {
@@ -179,12 +180,19 @@ window.atualizarDashboard = async function() {
 window.mudarTela = function(idTela, titulo, icone) {
     document.querySelectorAll('.tab-content').forEach(t => { t.classList.add('hidden'); t.classList.remove('block'); });
     document.getElementById('tela-' + idTela).classList.remove('hidden'); document.getElementById('tela-' + idTela).classList.add('block');
-    document.getElementById('tituloTela').innerHTML = `<i class="fa-solid ${icone} text-xl"></i> ${titulo}`;
-    document.querySelectorAll('.nav-btn').forEach(b => { b.classList.remove('text-red-500'); b.classList.add('text-gray-500'); });
-    if(event && event.currentTarget && event.currentTarget.classList.contains('nav-btn')) {
-        event.currentTarget.classList.remove('text-gray-500'); event.currentTarget.classList.add('text-red-500');
+    document.getElementById('tituloTela').innerHTML = `<i class="fa-solid ${icone} text-base"></i> ${titulo}`;
+    
+    document.querySelectorAll('.nav-btn').forEach(b => { 
+        b.classList.remove('text-zinc-100'); 
+        b.classList.add('text-zinc-600'); 
+    });
+    
+    if (event && event.currentTarget && event.currentTarget.classList.contains('nav-btn')) {
+        event.currentTarget.classList.remove('text-zinc-600'); 
+        event.currentTarget.classList.add('text-zinc-100');
     } else if (idTela === 'sumula') {
-        document.querySelectorAll('.nav-btn')[1].classList.remove('text-gray-500'); document.querySelectorAll('.nav-btn')[1].classList.add('text-red-500');
+        document.querySelectorAll('.nav-btn')[1].classList.remove('text-zinc-600'); 
+        document.querySelectorAll('.nav-btn')[1].classList.add('text-zinc-100');
     }
     window.scrollTo(0, 0); 
 }
@@ -263,13 +271,13 @@ window.salvarPartida = async function() {
                 let feedSocial = document.getElementById('feed-social');
                 if (feedSocial && feedSocial.innerHTML.includes('telefone está quieto')) feedSocial.innerHTML = '';
                 if (respostasIA.jornalista && feedSocial) {
-                    feedSocial.innerHTML = `<div class="bg-slate-800 p-4 rounded-xl shadow-lg border border-slate-700 mb-3"><p class="font-bold text-[10px] text-blue-400 mb-1 tracking-widest"><i class="fa-solid fa-newspaper"></i> GE E-SPORTS</p><p class="text-xs text-gray-200">${respostasIA.jornalista}</p></div>` + feedSocial.innerHTML;
+                    feedSocial.innerHTML = `<div class="bg-zinc-950 p-4 rounded-xl border border-zinc-800 mb-3"><p class="font-bold text-[9px] text-zinc-500 mb-1.5 tracking-widest"><i class="fa-regular fa-newspaper"></i> MANCHETE</p><p class="text-xs text-zinc-300 leading-relaxed">${respostasIA.jornalista}</p></div>` + feedSocial.innerHTML;
                 }
                 
                 let feedAuxiliar = document.getElementById('feed-auxiliar');
                 if (feedAuxiliar && feedAuxiliar.innerHTML.includes('Aguardando final')) feedAuxiliar.innerHTML = '';
                 if (respostasIA.auxiliar && feedAuxiliar) {
-                    feedAuxiliar.innerHTML = `<div class="mb-3 border-b border-amber-800/50 pb-3"><p class="font-mono text-xs leading-relaxed text-amber-100/90 italic">"${respostasIA.auxiliar}"</p><p class="text-[9px] text-amber-500 font-bold mt-2 text-right">- Jogo vs ${adv}</p></div>` + feedAuxiliar.innerHTML;
+                    feedAuxiliar.innerHTML = `<div class="mb-4 pb-4 border-b border-zinc-800/50"><p class="font-mono text-[11px] leading-relaxed text-zinc-400">"${respostasIA.auxiliar}"</p><p class="text-[9px] text-zinc-600 font-bold mt-2 text-right">Vs ${adv}</p></div>` + feedAuxiliar.innerHTML;
                 }
             } else {
                 console.error("Vercel falhou ao gerar AI Text.");
@@ -287,8 +295,8 @@ window.salvarPartida = async function() {
         }
         
         document.getElementById('golsPro').value = "0"; document.getElementById('golsContra').value = "0";
-        document.getElementById('containerGols').innerHTML = '<div class="flex gap-2"><input type="text" list="listaElencoFixo" placeholder="Jogador" class="flex-1 bg-slate-700 rounded-lg p-2.5 text-white text-sm outline-none"><input type="number" min="1" value="1" class="w-14 bg-slate-700 rounded-lg p-2.5 text-white text-sm outline-none text-center"><button type="button" onclick="this.parentElement.remove()" class="text-red-500 px-1 hover:text-red-400"><i class="fa-solid fa-trash"></i></button></div>';
-        document.getElementById('containerAssists').innerHTML = '<div class="flex gap-2"><input type="text" list="listaElencoFixo" placeholder="Jogador" class="flex-1 bg-slate-700 rounded-lg p-2.5 text-white text-sm outline-none"><input type="number" min="1" value="1" class="w-14 bg-slate-700 rounded-lg p-2.5 text-white text-sm outline-none text-center"><button type="button" onclick="this.parentElement.remove()" class="text-red-500 px-1 hover:text-red-400"><i class="fa-solid fa-trash"></i></button></div>';
+        document.getElementById('containerGols').innerHTML = '<div class="flex gap-2"><input type="text" list="listaElencoFixo" placeholder="Nome do Jogador" class="flex-1 bg-zinc-950 border border-zinc-800 rounded-lg p-2.5 text-zinc-200 text-sm outline-none focus:border-zinc-600"><input type="number" min="1" value="1" class="w-14 bg-zinc-950 border border-zinc-800 rounded-lg p-2.5 text-zinc-200 text-sm outline-none text-center focus:border-zinc-600"><button type="button" onclick="this.parentElement.remove()" class="text-zinc-600 px-1 hover:text-rose-500 transition"><i class="fa-solid fa-xmark"></i></button></div>';
+        document.getElementById('containerAssists').innerHTML = '<div class="flex gap-2"><input type="text" list="listaElencoFixo" placeholder="Nome do Jogador" class="flex-1 bg-zinc-950 border border-zinc-800 rounded-lg p-2.5 text-zinc-200 text-sm outline-none focus:border-zinc-600"><input type="number" min="1" value="1" class="w-14 bg-zinc-950 border border-zinc-800 rounded-lg p-2.5 text-zinc-200 text-sm outline-none text-center focus:border-zinc-600"><button type="button" onclick="this.parentElement.remove()" class="text-zinc-600 px-1 hover:text-rose-500 transition"><i class="fa-solid fa-xmark"></i></button></div>';
         document.getElementById('amarelos').value = ""; document.getElementById('vermelhos').value = "";
         document.getElementById('lesoes').value = ""; document.getElementById('fatoDoJogo').value = "";
         
@@ -305,7 +313,7 @@ window.criarCarreira = async function() {
     try {
         const { data } = await window.meuSupabase.from('carreiras').insert([{ treinador: nome, clube: clube }]).select().single();
         carreiraAtualId = data.id; document.getElementById('dashNomeTreinador').innerText = data.treinador; document.getElementById('dashNomeClube').innerText = data.clube;
-        document.getElementById('barraNavegacao').classList.remove('hidden'); window.mudarTela('dashboard', 'Visão Geral', 'fa-house');
+        document.getElementById('barraNavegacao').classList.remove('hidden'); window.mudarTela('dashboard', 'Dashboard', 'fa-chart-pie');
     } catch(e) {}
 }
 
