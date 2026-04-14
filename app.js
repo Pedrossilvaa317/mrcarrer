@@ -137,12 +137,59 @@ window.carregarAgenda = async function() {
         const { data, error } = await window.meuSupabase.from('agenda').select('*').eq('carreira_id', carreiraAtualId).order('data_jogo', { ascending: true });
         if (error || !data || data.length === 0) throw new Error("Sem dados");
         agendaAtual = data; renderizarListaJogos(agendaAtual);
+        gerarDiagnosticoPreditivo();
     } catch (error) {
         agendaAtual = [
             { id: 'mock1', adversario: 'Juventude', competicao: 'Brasileirão', local: 'Fora' },
             { id: 'mock2', adversario: 'Flamengo', competicao: 'Brasileirão', local: 'Casa' }
         ];
         renderizarListaJogos(agendaAtual);
+        gerarDiagnosticoPreditivo();
+    }
+}
+
+window.gerarDiagnosticoPreditivo = async function() {
+    const diagEl = document.getElementById('textoDiagnostico');
+    if (!diagEl) return;
+    if (agendaAtual.length === 0) { diagEl.innerHTML = "Sem jogos na agenda para observar."; return; }
+    
+    diagEl.innerHTML = "Puxando scout do adversário... ⏳";
+    
+    try {
+        const { data } = await window.meuSupabase.from('partidas').select('gols_pro, gols_contra').eq('carreira_id', carreiraAtualId);
+        let v = 0, e = 0, d = 0;
+        if(data) { data.forEach(j => { if (j.gols_pro > j.gols_contra) v++; else if (j.gols_pro === j.gols_contra) e++; else d++; }); }
+        
+        let adversario = agendaAtual[0].adversario;
+        
+        const response = await fetch('/api/auxiliar-tecnico', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ vitorias: v, empates: e, derrotas: d, adversario })
+        });
+        
+        if (response.ok) {
+            const result = await response.json();
+            const textoFinal = result.conselho || "Vamos firmes para esse jogo.";
+            
+            diagEl.innerHTML = "";
+            let i = 0;
+            let textArray = textoFinal.split('');
+            clearInterval(window.typingInterval);
+            window.typingInterval = setInterval(() => {
+                if (i < textArray.length) {
+                    diagEl.innerHTML += textArray[i];
+                    i++;
+                } else {
+                    clearInterval(window.typingInterval);
+                }
+            }, 30); 
+            
+        } else {
+            diagEl.innerHTML = '"Foco total hoje. Bora pra cima!"';
+        }
+    } catch (err) {
+        diagEl.innerHTML = '"Sem comunicação no momento. Foco no treino!"';
     }
 }
 

@@ -156,7 +156,24 @@
         </div>
 
         <div id="tela-calendario" class="tab-content hidden space-y-4">
-            <h3 class="text-[11px] font-semibold text-zinc-500 tracking-wider mt-2 mb-3 px-1 flex items-center gap-2"><i class="fa-regular fa-calendar"></i> FIXTURES DA TEMPORADA</h3>
+            
+            <div class="bg-zinc-900 border border-zinc-800 rounded-2xl shadow-lg relative mt-2 mb-6">
+                <!-- Top Header Decor -->
+                <div class="bg-zinc-800/80 rounded-t-2xl px-4 py-2 flex items-center gap-2 border-b border-zinc-700/50">
+                    <div class="w-6 h-6 rounded-full bg-zinc-700 flex items-center justify-center text-zinc-300 shadow-inner">
+                        <i class="fa-solid fa-headset text-[10px]"></i>
+                    </div>
+                    <span class="text-[10px] uppercase font-bold text-zinc-400 tracking-widest">Resenha Pré-Jogo</span>
+                </div>
+                <!-- Body -->
+                <div class="p-4">
+                    <p id="textoDiagnostico" class="text-sm font-medium text-zinc-300 leading-relaxed min-h-[40px] italic">
+                        Calculando perspectivas e retrospecto local... ⏳
+                    </p>
+                </div>
+            </div>
+
+            <h3 class="text-[11px] font-semibold text-zinc-500 tracking-wider mb-3 px-1 flex items-center gap-2"><i class="fa-regular fa-calendar"></i> FIXTURES DA TEMPORADA</h3>
             <div id="listaAgenda" class="space-y-2"><div class="text-center p-10 text-zinc-600 text-xs bg-zinc-900 rounded-xl border border-dashed border-zinc-800">Sincronizando banco de dados...</div></div>
         </div>
 
