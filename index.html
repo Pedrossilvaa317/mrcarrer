@@ -62,28 +62,48 @@
             <button onclick="criarCarreira()" class="w-full bg-zinc-100 hover:bg-white text-zinc-950 font-bold py-4 rounded-xl uppercase tracking-widest shadow-lg transition transform active:scale-95 text-sm">Assinar Contrato</button>
         </div>
 
-        <div id="tela-dashboard" class="tab-content hidden space-y-6">
-            <div class="bg-zinc-900 p-5 rounded-2xl border border-zinc-800 relative overflow-hidden shadow-xl">
-                <div class="flex items-center gap-4">
-                    <div class="w-14 h-14 bg-zinc-950 rounded-full border border-zinc-800 flex items-center justify-center text-xl text-zinc-500 z-10"><i class="fa-regular fa-user"></i></div>
-                    <div class="z-10 flex-1">
-                        <h2 id="dashNomeTreinador" class="text-lg font-bold uppercase tracking-wide text-zinc-100">Carregando...</h2>
-                        <p id="dashNomeClube" class="text-xs text-zinc-400 font-medium">Buscando Clube...</p>
+        <div id="tela-home" class="tab-content hidden space-y-4">
+            <!-- Container 1: Perfil do Treinador -->
+            <div class="bg-zinc-900 border border-zinc-800 rounded-2xl shadow-xl overflow-hidden relative">
+                <div class="h-16 bg-gradient-to-r from-zinc-800 to-zinc-900 border-b border-zinc-800"></div>
+                <div class="px-5 pb-5 relative">
+                    <div class="w-16 h-16 bg-zinc-950 rounded-2xl border-4 border-zinc-900 flex items-center justify-center text-2xl text-zinc-600 shadow-inner absolute -top-8 left-5">
+                        <i class="fa-solid fa-user-tie"></i>
                     </div>
-                </div>
-                <div class="mt-5 pt-4 border-t border-zinc-800/50 flex justify-between text-center divide-x divide-zinc-800/50">
-                    <div class="flex-1"><p id="statVitorias" class="text-2xl font-bold text-emerald-500">0</p><p class="text-[10px] text-zinc-500 font-semibold tracking-wider mt-0.5">VITÓRIAS</p></div>
-                    <div class="flex-1"><p id="statEmpates" class="text-2xl font-bold text-zinc-400">0</p><p class="text-[10px] text-zinc-500 font-semibold tracking-wider mt-0.5">EMPATES</p></div>
-                    <div class="flex-1"><p id="statDerrotas" class="text-2xl font-bold text-rose-500">0</p><p class="text-[10px] text-zinc-500 font-semibold tracking-wider mt-0.5">DERROTAS</p></div>
+                    <div class="mt-10">
+                        <h2 id="homeNomeTreinador" class="text-xl font-bold uppercase tracking-tight text-zinc-100">Carregando...</h2>
+                        <p id="homeNomeClube" class="text-xs text-zinc-400 font-medium tracking-widest flex items-center gap-1.5"><i class="fa-solid fa-shield text-zinc-600"></i> Buscando...</p>
+                    </div>
+                    <div class="flex gap-4 mt-4 pt-3 border-t border-zinc-800/50">
+                        <div class="flex-1"><p class="text-[10px] text-zinc-500 font-bold tracking-widest uppercase mb-0.5">Idade</p><p id="homeIdadeTreinador" class="text-sm font-semibold text-zinc-200">--</p></div>
+                        <div class="flex-1 border-l border-zinc-800 pl-4"><p class="text-[10px] text-zinc-500 font-bold tracking-widest uppercase mb-0.5">Nacionalidade</p><p id="homeNacionalidadeTreinador" class="text-sm font-semibold text-zinc-200">--</p></div>
+                        <div class="flex-1 border-l border-zinc-800 pl-4"><p class="text-[10px] text-zinc-500 font-bold tracking-widest uppercase mb-0.5">Reputação</p><p id="homeReputacaoTreinador" class="text-sm font-semibold text-amber-500 flex items-center gap-1">-- <i class="fa-solid fa-star text-[10px]"></i></p></div>
+                    </div>
                 </div>
             </div>
 
+            <!-- Container 2: Competições (Carrossel Horizontal) -->
             <div>
-                 <h3 class="text-[11px] font-semibold text-zinc-500 tracking-wider mb-3 px-1 flex items-center gap-2"><i class="fa-solid fa-flag text-zinc-600"></i> PRÓXIMO FIXTURE</h3>
-                 <button id="btnSumulaHome" onclick="mudarTela('sumula', 'Nova Súmula', 'fa-clipboard')" class="w-full bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 text-xs font-semibold py-4 rounded-xl uppercase tracking-widest transition flex justify-between items-center px-6">
-                    <span>Preencher Súmula</span>
-                    <i class="fa-solid fa-chevron-right text-zinc-600"></i>
-                 </button>
+                <h3 class="text-[11px] font-semibold text-zinc-500 tracking-wider mb-2.5 px-1 flex items-center gap-2 uppercase"><i class="fa-solid fa-trophy text-zinc-400"></i> Competições Ativas</h3>
+                <div id="homeCompeticoesCarrossel" class="flex overflow-x-auto gap-3 pb-2 snap-x snap-mandatory hide-scrollbar">
+                    <!-- Preenchido via JS -->
+                </div>
+            </div>
+
+            <!-- Container 3: Próximo Desafio -->
+            <div class="bg-zinc-900 border border-zinc-800 rounded-2xl shadow-xl overflow-hidden mt-4">
+                <div class="bg-zinc-800/80 px-4 py-2 border-b border-zinc-700/50 flex justify-between items-center">
+                    <span class="text-[10px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-1.5"><i class="fa-solid fa-bullhorn"></i> Próximo Desafio</span>
+                    <span id="homeProximoData" class="text-[9px] text-zinc-500 font-semibold border border-zinc-700 bg-zinc-950 px-2 py-0.5 rounded">Em breve</span>
+                </div>
+                <div class="p-5 text-center">
+                    <p class="text-[10px] text-zinc-500 font-semibold tracking-widest mb-1" id="homeProximoCompeticao">--</p>
+                    <h3 id="homeProximoAdversario" class="text-2xl font-bold text-zinc-100 uppercase tracking-tight mb-5">Aguardando Sorteio</h3>
+                    
+                    <button onclick="mudarTela('sumula', 'Nova Súmula', 'fa-clipboard')" id="btnJogarProximo" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-xl uppercase tracking-widest shadow-lg shadow-blue-900/20 transition flex justify-center items-center gap-2 text-sm">
+                        <i class="fa-solid fa-play"></i> Jogar Próxima Partida
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -230,7 +250,7 @@
 
     <nav id="barraNavegacao" class="hidden bg-zinc-950/90 backdrop-blur border-t border-zinc-900 fixed bottom-0 w-full px-2 py-2.5 z-50">
         <div class="max-w-md mx-auto flex justify-between items-center">
-            <button onclick="mudarTela('dashboard', 'Dashboard', 'fa-chart-pie')" class="nav-btn active w-1/5 flex flex-col items-center gap-1.5 text-zinc-100 transition"><i class="fa-solid fa-chart-pie text-lg"></i><span class="text-[8px] font-bold uppercase tracking-widest">Home</span></button>
+            <button onclick="mudarTela('home', 'Home', 'fa-home')" class="nav-btn active w-1/5 flex flex-col items-center gap-1.5 text-zinc-100 transition"><i class="fa-solid fa-home text-lg"></i><span class="text-[8px] font-bold uppercase tracking-widest">Início</span></button>
             <button onclick="mudarTela('sumula', 'Nova Súmula', 'fa-clipboard')" class="nav-btn w-1/5 flex flex-col items-center gap-1.5 text-zinc-600 hover:text-zinc-400 transition"><i class="fa-solid fa-clipboard text-lg"></i><span class="text-[8px] font-bold uppercase tracking-widest">Súmula</span></button>
             <button onclick="mudarTela('calendario', 'Fixtures', 'fa-calendar')" class="nav-btn w-1/5 flex flex-col items-center gap-1.5 text-zinc-600 hover:text-zinc-400 transition"><i class="fa-solid fa-calendar text-lg"></i><span class="text-[8px] font-bold uppercase tracking-widest">Agenda</span></button>
             <button onclick="mudarTela('social', 'Hub Social', 'fa-hashtag')" class="nav-btn w-1/5 flex flex-col items-center gap-1.5 text-zinc-600 hover:text-zinc-400 transition"><i class="fa-solid fa-hashtag text-lg"></i><span class="text-[8px] font-bold uppercase tracking-widest">Social</span></button>

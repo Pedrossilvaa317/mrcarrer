@@ -10,9 +10,12 @@ async function iniciarApp() {
         const { data } = await window.meuSupabase.from('carreiras').select('*').order('criado_em', { ascending: false }).limit(1).single();
         if (data) {
             carreiraAtualId = data.id;
-            document.getElementById('dashNomeTreinador').innerText = data.treinador;
             document.getElementById('barraNavegacao').classList.remove('hidden');
-            window.mudarTela('dashboard', 'Dashboard', 'fa-chart-pie');
+            
+            // Abastecer o Perfil com Case Tratado Estilisticamente
+            window.atualizarHomeDashboard(data);
+            
+            window.mudarTela('home', 'Home', 'fa-home');
             atualizarDashboard();
             await window.carregarElenco();
             window.popularSeletorSúmula();
@@ -22,6 +25,39 @@ async function iniciarApp() {
             window.mudarTela('cadastro', 'Assinar Contrato', 'fa-id-card');
         }
     } catch (e) { window.mudarTela('cadastro', 'Assinar Contrato', 'fa-id-card'); }
+}
+
+window.atualizarHomeDashboard = function(carreira) {
+    if(!carreira) return;
+    
+    // Title Case Transformer
+    const toTitleCase = (str) => str.replace(/\w\S*/g, txt => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
+    
+    document.getElementById('homeNomeTreinador').innerText = toTitleCase(carreira.treinador);
+    document.getElementById('homeNomeClube').innerHTML = `<i class="fa-solid fa-shield text-zinc-600"></i> ` + toTitleCase(carreira.clube);
+    
+    document.getElementById('homeIdadeTreinador').innerText = "42 Anos";
+    document.getElementById('homeNacionalidadeTreinador').innerText = "Brasileiro";
+    document.getElementById('homeReputacaoTreinador').innerHTML = `Intocável <i class="fa-solid fa-star text-[10px]"></i>`;
+    
+    // Carrossel Mock
+    let carrosselHtml = '';
+    const comps = [
+        { nome: 'Camp. Brasileiro', fase: '13ª Rodada', status: 'Em Andamento' },
+        { nome: 'Copa do Brasil', fase: 'Oitavas', status: 'Classificado' },
+        { nome: 'Libertadores', fase: 'Fase de Grupos', status: 'Líder' }
+    ];
+    comps.forEach(c => {
+        carrosselHtml += `
+        <div class="min-w-[140px] snap-center bg-zinc-900 border border-zinc-800 rounded-xl p-3 shadow text-left flex-shrink-0">
+            <p class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-1 truncate">${c.nome}</p>
+            <p class="text-sm font-bold text-zinc-200">${c.fase}</p>
+            <p class="text-[9px] text-emerald-500 font-bold uppercase tracking-widest mt-1">${c.status}</p>
+        </div>`;
+    });
+    
+    let elCarrossel = document.getElementById('homeCompeticoesCarrossel');
+    if(elCarrossel) elCarrossel.innerHTML = carrosselHtml;
 }
 
 window.carregarElenco = async function() {
@@ -282,11 +318,20 @@ window.gerarDiagnosticoPreditivo = async function() {
 
 function renderizarListaJogos(jogos) {
     if (jogos.length > 0) {
-        document.getElementById('adversario').value = jogos[0].adversario;
-        if(document.getElementById('btnSumulaHome')) document.getElementById('btnSumulaHome').innerHTML = `Súmula vs ${jogos[0].adversario} <i class="fa-solid fa-arrow-right"></i>`;
+        if(document.getElementById('adversario')) document.getElementById('adversario').value = jogos[0].adversario;
+        
+        // Logica Home Container 3
+        if(document.getElementById('homeProximoAdversario')) document.getElementById('homeProximoAdversario').innerText = jogos[0].adversario;
+        if(document.getElementById('homeProximoCompeticao')) document.getElementById('homeProximoCompeticao').innerText = jogos[0].competicao + " • " + jogos[0].local;
+        if(document.getElementById('homeProximoData')) document.getElementById('homeProximoData').innerText = new Date().toLocaleDateString('pt-BR');
+        
     } else {
-        document.getElementById('adversario').value = "";
-        if(document.getElementById('btnSumulaHome')) document.getElementById('btnSumulaHome').innerHTML = `Nenhum jogo na agenda <i class="fa-solid fa-calendar-plus"></i>`;
+        if(document.getElementById('adversario')) document.getElementById('adversario').value = "";
+        
+        // Vazio Home
+        if(document.getElementById('homeProximoAdversario')) document.getElementById('homeProximoAdversario').innerText = "Fim de Temporada";
+        if(document.getElementById('homeProximoCompeticao')) document.getElementById('homeProximoCompeticao').innerText = "--";
+        if(document.getElementById('homeProximoData')) document.getElementById('homeProximoData').innerText = "Férias";
     }
 
     let html = '';
@@ -493,8 +538,10 @@ window.criarCarreira = async function() {
     if(!nome || !clube) return alert("Preencha o seu nome e o clube!");
     try {
         const { data } = await window.meuSupabase.from('carreiras').insert([{ treinador: nome, clube: clube }]).select().single();
-        carreiraAtualId = data.id; document.getElementById('dashNomeTreinador').innerText = data.treinador; document.getElementById('dashNomeClube').innerText = data.clube;
-        document.getElementById('barraNavegacao').classList.remove('hidden'); window.mudarTela('dashboard', 'Dashboard', 'fa-chart-pie');
+        carreiraAtualId = data.id; 
+        window.atualizarHomeDashboard(data);
+        document.getElementById('barraNavegacao').classList.remove('hidden'); window.mudarTela('home', 'Home', 'fa-home');
+        iniciarApp(); // Roda a master para dar o sync final
     } catch(e) {}
 }
 
