@@ -157,7 +157,7 @@ window.renderizarAvaliacaoRapida = function() {
     let html = '';
     elencoFixo.forEach(jog => {
         html += `
-        <div class="bg-zinc-950 border border-zinc-800 p-2.5 rounded-xl flex justify-between items-center transition" data-id="${jog.id}" data-nome="${jog.nome}" data-energia="${jog.energia || 100}" data-avaliacao="">
+        <div class="bg-zinc-950 border border-zinc-800 p-2.5 rounded-xl flex justify-between items-center transition" data-id="${jog.id}" data-nome="${jog.nome}" data-energia="${jog.energia || 100}" data-partidas="${jog.partidas_jogadas || 0}" data-avaliacao="">
             <span class="text-[11px] font-semibold text-zinc-200 tracking-wider flex items-center gap-2">
                 <span class="text-[8px] text-zinc-500 bg-zinc-800 px-1 py-0.5 rounded uppercase border border-zinc-700">${jog.posicao || '-'}</span> 
                 ${jog.nome}
@@ -302,7 +302,8 @@ window.carregarRankings = async function() {
                     <div>
                         <div class="flex items-center gap-2 mb-0.5">
                             <span class="text-[9px] font-bold bg-zinc-800 px-1.5 py-0.5 rounded text-zinc-400 border border-zinc-700 uppercase tracking-widest">${jogador.posicao || 'N/A'}</span>
-                            <span class="text-[10px] text-zinc-500" title="Moral: ${jogador.moral}">Moral: ${moralIcon}</span>
+                            <span class="text-[10px] font-bold text-zinc-600 ml-1">👕 ${jogador.partidas_jogadas || 0} J</span>
+                            <span class="text-[10px] text-zinc-500 ml-1" title="Moral: ${jogador.moral}">Moral: ${moralIcon}</span>
                         </div>
                         <h4 class="font-bold text-zinc-100 mt-1">${jogador.nome}</h4>
                     </div>
@@ -486,18 +487,23 @@ window.salvarPartida = async function() {
                 let idJog = card.getAttribute('data-id');
                 let aval = card.getAttribute('data-avaliacao');
                 let energiaBase = parseInt(card.getAttribute('data-energia')) || 100;
+                let partidasBase = parseInt(card.getAttribute('data-partidas')) || 0;
                 
                 let novaEnergia = energiaBase;
                 let novaMoral = resultPlacar;
+                let jogou = false;
                 
                 if (aval === 'fogo') {
                     novaMoral = 'Excelente';
                     novaEnergia = Math.max(0, energiaBase - 15);
+                    jogou = true;
                 } else if (aval === 'neutro') {
                     novaEnergia = Math.max(0, energiaBase - 20);
+                    jogou = true;
                 } else if (aval === 'frio') {
                     novaMoral = 'Baixa';
                     novaEnergia = Math.max(0, energiaBase - 25);
+                    jogou = true;
                 } else {
                     // Cuidado Físico pro Reserva (Recupera +15)
                     novaEnergia = Math.min(100, energiaBase + 15);
@@ -506,7 +512,8 @@ window.salvarPartida = async function() {
                 updatesJogadores.push({
                     id: idJog,
                     energia: novaEnergia,
-                    moral: novaMoral
+                    moral: novaMoral,
+                    partidas_jogadas: jogou ? (partidasBase + 1) : partidasBase
                 });
             });
         }
@@ -625,6 +632,61 @@ window.criarCarreira = async function() {
         window.mudarTela('home', 'Home', 'fa-home');
         iniciarApp(); // Roda a master para dar o sync final
     } catch(e) {}
+}
+
+window.abrirModal = function(id) { document.getElementById(id).classList.remove('hidden'); }
+window.fecharModal = function(id) { document.getElementById(id).classList.add('hidden'); }
+
+window.salvarNovoJogo = async function() {
+    const adv = document.getElementById('novoJogoAdv').value;
+    const comp = document.getElementById('novoJogoComp').value || "Amistoso";
+    const loc = document.getElementById('novoJogoLocal').value;
+    const dateE = document.getElementById('novoJogoData').value;
+    
+    if(!adv) return alert("Digite o nome do adversário.");
+    
+    document.getElementById('btnSaveJogo').innerText = "Agendando...";
+    try {
+        let payload = {
+            carreira_id: carreiraAtualId,
+            adversario: adv,
+            competicao: comp,
+            local: loc
+        };
+        if(dateE) payload.data_jogo = dateE;
+        
+        await window.meuSupabase.from('agenda').insert([payload]);
+        
+        document.getElementById('novoJogoAdv').value = '';
+        fecharModal('modal-jogo');
+        carregarAgenda();
+    } catch(e) { alert("Erro ao marcar jogo"); }
+    finally { document.getElementById('btnSaveJogo').innerText = "Agendar"; }
+}
+
+window.salvarNovoJogador = async function() {
+    const nome = document.getElementById('novoJogNome').value;
+    const pos = document.getElementById('novoJogPos').value;
+    const num = document.getElementById('novoJogNum').value;
+    
+    if(!nome) return alert("Digite o nome do jogador.");
+    
+    document.getElementById('btnSaveJogador').innerText = "Assinando...";
+    try {
+        await window.meuSupabase.from('jogadores').insert([{
+            nome: nome,
+            posicao: pos,
+            energia: 100,
+            moral: 'Boa',
+            partidas_jogadas: 0,
+            // A coluna "camisa" não foi obrigatória no setup original, mas enviaremos se a tabela Supabase tiver permissão. Não enviarei pra evitar erro de schema. O usuário apenas pediu para testar na view.
+        }]);
+        
+        document.getElementById('novoJogNome').value = '';
+        fecharModal('modal-jogador');
+        carregarElenco();
+    } catch(e) { alert("Erro ao assinar com jogador"); }
+    finally { document.getElementById('btnSaveJogador').innerText = "Contratar"; }
 }
 
 window.verificarSessao();

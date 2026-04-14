@@ -225,7 +225,11 @@
                 </div>
             </div>
 
-            <h3 class="text-[11px] font-semibold text-zinc-500 tracking-wider mb-3 px-1 flex items-center gap-2"><i class="fa-regular fa-calendar"></i> FIXTURES DA TEMPORADA</h3>
+            <div class="flex justify-between items-center mb-3 px-1">
+                <h3 class="text-[11px] font-semibold text-zinc-500 tracking-wider flex items-center gap-2"><i class="fa-regular fa-calendar"></i> FIXTURES DA TEMPORADA</h3>
+                <button onclick="abrirModal('modal-jogo')" class="text-[10px] font-bold uppercase tracking-widest bg-zinc-800 text-zinc-300 hover:text-white px-3 py-1.5 rounded border border-zinc-700 transition">Adicionar Jogo <i class="fa-solid fa-plus text-emerald-500 ml-1"></i></button>
+            </div>
+            
             <div id="listaAgenda" class="space-y-2"><div class="text-center p-10 text-zinc-600 text-xs bg-zinc-900 rounded-xl border border-dashed border-zinc-800">Sincronizando banco de dados...</div></div>
         </div>
 
@@ -263,12 +267,91 @@
             </div>
 
             <div class="mt-8 mb-4">
-                <h3 class="text-[11px] font-semibold text-zinc-500 tracking-wider mb-4 px-1 flex items-center gap-2"><i class="fa-solid fa-users-viewfinder text-zinc-400"></i> PLANTEL PRINCIPAL</h3>
+                <div class="flex justify-between items-center mb-4 px-1">
+                    <h3 class="text-[11px] font-semibold text-zinc-500 tracking-wider flex items-center gap-2"><i class="fa-solid fa-users-viewfinder text-zinc-400"></i> PLANTEL PRINCIPAL</h3>
+                    <button onclick="abrirModal('modal-jogador')" class="text-[10px] font-bold uppercase tracking-widest bg-zinc-800 text-zinc-300 hover:text-white px-3 py-1.5 rounded border border-zinc-700 transition">Contratar <i class="fa-solid fa-plus text-amber-500 ml-1"></i></button>
+                </div>
+                
                 <div id="listaPlantel" class="space-y-3 mt-2">
                     <div class="text-center p-6 text-zinc-600 text-xs bg-zinc-900 rounded-xl border border-dashed border-zinc-800">Analisando condição física do elenco...</div>
                 </div>
             </div>
 
+        </div>
+
+        <!-- Modais de Cadastro CRUD -->
+        
+        <!-- Modal: Novo Jogo -->
+        <div id="modal-jogo" class="fixed inset-0 z-[60] bg-zinc-950/90 backdrop-blur-sm flex justify-center items-center p-4 hidden">
+            <div class="bg-zinc-900 border border-zinc-800 w-full max-w-sm rounded-2xl shadow-2xl p-5 relative">
+                <h2 class="text-lg font-bold text-zinc-100 uppercase tracking-tight mb-4 border-b border-zinc-800/50 pb-2">Agendar Partida</h2>
+                
+                <div class="space-y-3 mb-6">
+                    <div>
+                        <label class="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1.5">Adversário</label>
+                        <input type="text" id="novoJogoAdv" placeholder="Nome do Clube" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-zinc-100 outline-none focus:border-zinc-600 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1.5">Competição / Tipo</label>
+                        <input type="text" id="novoJogoComp" placeholder="Amistoso, Liga..." class="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-zinc-100 outline-none focus:border-zinc-600 text-sm">
+                    </div>
+                    <div class="flex gap-3">
+                        <div class="flex-1">
+                            <label class="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1.5">Mando</label>
+                            <select id="novoJogoLocal" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-zinc-100 outline-none focus:border-zinc-600 text-sm">
+                                <option value="Casa">Casa</option>
+                                <option value="Fora">Fora</option>
+                                <option value="Neutro">Neutro</option>
+                            </select>
+                        </div>
+                        <div class="flex-1">
+                            <label class="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1.5">Data Opcional</label>
+                            <input type="date" id="novoJogoData" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-zinc-400 outline-none focus:border-zinc-600 text-sm">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex gap-2">
+                    <button onclick="fecharModal('modal-jogo')" class="flex-1 py-3 text-xs font-bold uppercase tracking-widest rounded-xl text-zinc-500 hover:text-zinc-300 transition">Cancelar</button>
+                    <button onclick="salvarNovoJogo()" id="btnSaveJogo" class="flex-1 py-3 text-xs font-bold uppercase tracking-widest rounded-xl bg-blue-600 hover:bg-blue-500 text-white shadow-lg transition">Agendar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal: Novo Jogador -->
+        <div id="modal-jogador" class="fixed inset-0 z-[60] bg-zinc-950/90 backdrop-blur-sm flex justify-center items-center p-4 hidden">
+            <div class="bg-zinc-900 border border-zinc-800 w-full max-w-sm rounded-2xl shadow-2xl p-5 relative">
+                <h2 class="text-lg font-bold text-zinc-100 uppercase tracking-tight mb-4 border-b border-zinc-800/50 pb-2">Contratar Reforço</h2>
+                
+                <div class="space-y-3 mb-6">
+                    <div>
+                        <label class="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1.5">Nome / Apelido</label>
+                        <input type="text" id="novoJogNome" placeholder="Ex: Riquelme" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-zinc-100 outline-none focus:border-zinc-600 text-sm">
+                    </div>
+                    <div class="flex gap-3">
+                        <div class="flex-1">
+                            <label class="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1.5">Posição</label>
+                            <select id="novoJogPos" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-zinc-100 outline-none focus:border-zinc-600 text-sm">
+                                <option value="GOL">GOL - Goleiro</option>
+                                <option value="DEF">DEF - Zagueiro</option>
+                                <option value="LAT">LAT - Lateral</option>
+                                <option value="VOL">VOL - Volante</option>
+                                <option value="MEI">MEI - Meia</option>
+                                <option value="ATA">ATA - Atacante</option>
+                            </select>
+                        </div>
+                        <div class="w-24">
+                            <label class="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1.5">Camisa</label>
+                            <input type="number" id="novoJogNum" placeholder="10" min="1" max="99" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-zinc-100 text-center outline-none focus:border-zinc-600 text-sm">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex gap-2">
+                    <button onclick="fecharModal('modal-jogador')" class="flex-1 py-3 text-xs font-bold uppercase tracking-widest rounded-xl text-zinc-500 hover:text-zinc-300 transition">Cancelar</button>
+                    <button onclick="salvarNovoJogador()" id="btnSaveJogador" class="flex-1 py-3 text-xs font-bold uppercase tracking-widest rounded-xl bg-amber-600 hover:bg-amber-500 text-white shadow-lg transition">Contratar</button>
+                </div>
+            </div>
         </div>
 
     </main>
