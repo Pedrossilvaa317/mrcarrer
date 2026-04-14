@@ -4,6 +4,7 @@ window.meuSupabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 var carreiraAtualId = null;
 var agendaAtual = [];
 var elencoFixo = [];
+window.estadoAvaliacao = {};
 
 async function iniciarApp() {
     try {
@@ -29,8 +30,45 @@ window.carregarElenco = async function() {
         const { data, error } = await window.meuSupabase.from('jogadores').select('*').order('nome', { ascending: true });
         if (!error && data) {
             elencoFixo = data;
+            window.renderizarAvaliacaoRapida();
         }
     } catch(e) { console.error(e); }
+}
+
+window.renderizarAvaliacaoRapida = function() {
+    let container = document.getElementById('miniCardsAvaliacao');
+    if (!container) return;
+    
+    let html = '';
+    elencoFixo.forEach(jogador => {
+        window.estadoAvaliacao[jogador.id] = null; // Default neutro
+        
+        html += `
+        <div class="bg-zinc-950 p-2.5 rounded-lg border border-zinc-800 flex justify-between items-center shadow-inner">
+            <span class="text-[11px] font-bold text-zinc-300 w-1/2 line-clamp-1">${jogador.nome}</span>
+            <div class="flex gap-2">
+                <button type="button" id="btn_frio_${jogador.id}" onclick="selecionarAvaliacao('${jogador.id}', 'frio')" class="w-8 h-8 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-xs hover:scale-110 transition active:scale-95 text-opacity-50 grayscale shadow">🥶</button>
+                <button type="button" id="btn_neutro_${jogador.id}" onclick="selecionarAvaliacao('${jogador.id}', 'neutro')" class="w-8 h-8 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-xs hover:scale-110 transition active:scale-95 text-opacity-50 grayscale shadow">😐</button>
+                <button type="button" id="btn_fogo_${jogador.id}" onclick="selecionarAvaliacao('${jogador.id}', 'fogo')" class="w-8 h-8 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-xs hover:scale-110 transition active:scale-95 text-opacity-50 grayscale shadow">🔥</button>
+            </div>
+        </div>`;
+    });
+    container.innerHTML = html;
+}
+
+window.selecionarAvaliacao = function(jogadorId, tipo) {
+    document.getElementById(`btn_frio_${jogadorId}`).className = "w-8 h-8 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-xs hover:scale-110 transition active:scale-95 text-opacity-50 grayscale shadow";
+    document.getElementById(`btn_neutro_${jogadorId}`).className = "w-8 h-8 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-xs hover:scale-110 transition active:scale-95 text-opacity-50 grayscale shadow";
+    document.getElementById(`btn_fogo_${jogadorId}`).className = "w-8 h-8 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-xs hover:scale-110 transition active:scale-95 text-opacity-50 grayscale shadow";
+    
+    if (window.estadoAvaliacao[jogadorId] === tipo) {
+        window.estadoAvaliacao[jogadorId] = null;
+    } else {
+        window.estadoAvaliacao[jogadorId] = tipo;
+        if (tipo === 'frio') { document.getElementById(`btn_frio_${jogadorId}`).classList.replace('bg-zinc-800', 'bg-blue-600'); document.getElementById(`btn_frio_${jogadorId}`).classList.replace('border-zinc-700', 'border-blue-500'); document.getElementById(`btn_frio_${jogadorId}`).classList.remove('grayscale', 'text-opacity-50'); }
+        if (tipo === 'neutro') { document.getElementById(`btn_neutro_${jogadorId}`).classList.replace('bg-zinc-800', 'bg-zinc-500'); document.getElementById(`btn_neutro_${jogadorId}`).classList.replace('border-zinc-700', 'border-zinc-400'); document.getElementById(`btn_neutro_${jogadorId}`).classList.remove('grayscale', 'text-opacity-50'); }
+        if (tipo === 'fogo') { document.getElementById(`btn_fogo_${jogadorId}`).classList.replace('bg-zinc-800', 'bg-orange-600'); document.getElementById(`btn_fogo_${jogadorId}`).classList.replace('border-zinc-700', 'border-orange-500'); document.getElementById(`btn_fogo_${jogadorId}`).classList.remove('grayscale', 'text-opacity-50'); }
+    }
 }
 
 window.popularSeletorSúmula = function() {
@@ -387,6 +425,44 @@ window.salvarPartida = async function() {
         document.getElementById('containerAssists').innerHTML = '<div class="flex gap-2"><input type="text" list="listaElencoFixo" placeholder="Nome do Jogador" class="flex-1 bg-zinc-950 border border-zinc-800 rounded-lg p-2.5 text-zinc-200 text-sm outline-none focus:border-zinc-600"><input type="number" min="1" value="1" class="w-14 bg-zinc-950 border border-zinc-800 rounded-lg p-2.5 text-zinc-200 text-sm outline-none text-center focus:border-zinc-600"><button type="button" onclick="this.parentElement.remove()" class="text-zinc-600 px-1 hover:text-rose-500 transition"><i class="fa-solid fa-xmark"></i></button></div>';
         document.getElementById('amarelos').value = ""; document.getElementById('vermelhos').value = "";
         document.getElementById('lesoes').value = ""; document.getElementById('fatoDoJogo').value = "";
+        
+        // UPDATE EM MASSA (ENERGIA E MORAL) - VESTIÁRIO TINDER //
+        let placarMoralBase = 'Boa';
+        let golsTime = parseInt(pro);
+        let golsAdv = parseInt(contra);
+        if (golsTime > golsAdv) placarMoralBase = 'Excelente';
+        if (golsTime < golsAdv) placarMoralBase = 'Baixa';
+
+        let updatesAvaliacao = [];
+        elencoFixo.forEach(jogador => {
+            let energiaAtual = parseInt(jogador.energia) || 100;
+            let ava = window.estadoAvaliacao[jogador.id];
+            
+            let novaMoral = placarMoralBase;
+            let novaEnergia = energiaAtual;
+
+            if (ava === 'fogo') {
+                novaMoral = 'Excelente';
+                novaEnergia = Math.max(0, energiaAtual - 15);
+            } else if (ava === 'neutro') {
+                novaEnergia = Math.max(0, energiaAtual - 20);
+            } else if (ava === 'frio') {
+                novaMoral = 'Baixa';
+                novaEnergia = Math.max(0, energiaAtual - 25);
+            } else {
+                novaEnergia = Math.min(100, energiaAtual + 15); // Descansou
+            }
+
+            // Garante que é numérico pro supabase
+            if(isNaN(novaEnergia)) novaEnergia = 100;
+
+            updatesAvaliacao.push(
+                window.meuSupabase.from('jogadores').update({ moral: novaMoral, energia: novaEnergia }).eq('id', jogador.id)
+            );
+        });
+        
+        await Promise.all(updatesAvaliacao);
+        await window.carregarElenco(); // Recarrega os dados com as energias frescas
         
         atualizarDashboard(); 
         carregarRankings(); // RECALCULA O RANKING COM OS DADOS NOVOS!
