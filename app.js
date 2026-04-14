@@ -189,122 +189,12 @@ window.mudarTela = function(idTela, titulo, icone) {
     window.scrollTo(0, 0); 
 }
 
-window.processarImagemVAR = function(input) {
-    if (input.files && input.files[0]) {
-        const file = input.files[0];
-        const btnVar = document.getElementById('btnVAR');
-        const originalText = btnVar.innerHTML;
-        btnVar.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> OTIMIZANDO FOTO...`;
-        btnVar.disabled = true;
-
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const img = new Image();
-            img.onload = async function() {
-                // Redimensiona usando Canvas para despencar o tamanho do Base64 (Evita Vercel 413 Payload Too Large)
-                const canvas = document.createElement('canvas');
-                let width = img.width;
-                let height = img.height;
-                const maxDim = 1200;
-
-                if (width > height && width > maxDim) {
-                    height *= maxDim / width;
-                    width = maxDim;
-                } else if (height > maxDim) {
-                    width *= maxDim / height;
-                    height = maxDim;
-                }
-
-                canvas.width = width;
-                canvas.height = height;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0, width, height);
-
-                // Força compressão JPEG leve
-                const base64completo = canvas.toDataURL('image/jpeg', 0.82);
-                const apenasBase64 = base64completo.split(',')[1];
-                const formatoValido = 'image/jpeg';
-                
-                btnVar.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> VAR ANALISANDO...`;
-
-                try {
-                    const resposta = await fetch('/api/analisar-jogo', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ imagemBase64: apenasBase64, mimeType: formatoValido })
-                    });
-
-                    if (!resposta.ok) {
-                        let erroSrv = "";
-                        try { const j = await resposta.json(); erroSrv = j.error || "Erro Interno"; } catch(x){ erroSrv = resposta.statusText; }
-                        throw new Error(`Servidor rejeitou [${resposta.status}]: ${erroSrv}`);
-                    }
-                    
-                    const dados = await resposta.json();
-                    preencherSumulaVAR(dados);
-                    
-                    btnVar.innerHTML = `<i class="fa-solid fa-check text-xl"></i> SÚMULA PREENCHIDA!`;
-                    btnVar.classList.replace('bg-blue-600', 'bg-green-600');
-                    btnVar.classList.replace('border-blue-400', 'border-green-400');
-                    
-                    document.getElementById('btnSalvar').innerHTML = "Salvar e Coletiva 🎙️ (VAR Lido Confirmado!)";
-
-                    setTimeout(() => {
-                        btnVar.innerHTML = originalText;
-                        btnVar.classList.replace('bg-green-600', 'bg-blue-600');
-                        btnVar.classList.replace('border-green-400', 'border-blue-400');
-                        btnVar.disabled = false;
-                    }, 4000);
-
-                } catch(err) {
-                    alert("Decisão de Campo mantida (Erro no VAR): " + err.message);
-                    btnVar.innerHTML = originalText;
-                    btnVar.disabled = false;
-                }
-            };
-            img.src = e.target.result;
-        };
-        
-        reader.readAsDataURL(file); // Trigger
-    }
-}
-
-window.preencherSumulaVAR = function(dados) {
-    if(dados.gols_pro !== undefined) document.getElementById('golsPro').value = dados.gols_pro;
-    if(dados.gols_contra !== undefined) document.getElementById('golsContra').value = dados.gols_contra;
-    
-    document.getElementById('adversario').value = `Auto-Preenchido Tatico ${Math.floor(Math.random() * 99)}`; // Evita erro se campo obrigatorio mas a IA nao le adv
-
-    const renderDinamicRows = (containerId, arrDestaques) => {
-        const container = document.getElementById(containerId);
-        container.innerHTML = ''; 
-        if(!arrDestaques || arrDestaques.length === 0) {
-            container.innerHTML = `<div class="flex gap-2"><input type="text" list="listaElencoFixo" placeholder="Jogador" class="flex-1 bg-slate-700 rounded-lg p-2.5 text-white text-sm outline-none"><input type="number" min="1" value="1" class="w-14 bg-slate-700 rounded-lg p-2.5 text-white text-sm outline-none text-center"><button type="button" onclick="this.parentElement.remove()" class="text-red-500 px-1 hover:text-red-400"><i class="fa-solid fa-trash"></i></button></div>`;
-            return;
-        }
-
-        let contagem = {};
-        arrDestaques.forEach(n => {
-            let nomeCapitalizado = n.trim(); // Se a db falhar dps o array filter ignora
-            contagem[nomeCapitalizado] = (contagem[nomeCapitalizado] || 0) + 1;
-        });
-
-        Object.keys(contagem).forEach(nomeJogador => {
-            let qtd = contagem[nomeJogador];
-            const div = document.createElement('div');
-            div.className = 'flex gap-2';
-            div.innerHTML = `<input type="text" list="listaElencoFixo" value="${nomeJogador}" placeholder="Jogador" class="flex-1 bg-slate-700 rounded-lg p-2.5 text-white text-sm outline-none"><input type="number" min="1" value="${qtd}" class="w-14 bg-slate-700 rounded-lg p-2.5 text-white text-sm outline-none text-center"><button type="button" onclick="this.parentElement.remove()" class="text-red-500 px-1 hover:text-red-400"><i class="fa-solid fa-trash"></i></button>`;
-            container.appendChild(div);
-        });
+// FUNCAO FAKE DESCARTADA
+window.simularIAGemini = async function(adv, pro, contra, detalhes) {
+    return {
+        jornalista: "Relatório de imprensa ativado...",
+        auxiliar: "Análise técnica em andamento..."
     };
-
-    renderDinamicRows('containerGols', dados.marcadores);
-    renderDinamicRows('containerAssists', dados.assistencias);
-
-    if(dados.amarelos) document.getElementById('amarelos').value = dados.amarelos.join(', ');
-    if(dados.vermelhos) document.getElementById('vermelhos').value = dados.vermelhos.join(', ');
-    
-    if(dados.fato_do_jogo) document.getElementById('fatoDoJogo').value = dados.fato_do_jogo;
 }
 
 window.salvarPartida = async function() {
@@ -358,20 +248,43 @@ window.salvarPartida = async function() {
         };
         const fatoJson = JSON.stringify(dadosEstruturados);
 
-        // A STRING PADRONIZADA para consumo local/simulado
-        const detalhesParaIA = `Gols: ${marcadoresStr}. Assists: ${assistenciasStr}. Cartões/Lesões: ${amarelos} / ${vermelhos} / ${lesoes}. Relato: ${fato}`;
-        const tweets = await simularIAGemini(adv, pro, contra, detalhesParaIA);
+        const detalhesParaIA = `Adversário: ${adv}. Placar: Nosso Time ${pro} x ${contra} ${adv}. Gols marcados: ${marcadoresStr}. Assists: ${assistenciasStr}. Cartões (A/V): ${amarelos} / ${vermelhos}. Lesões: ${lesoes}. Relato sumário do treinador: ${fato}`;
         
-        // Fato_do_jogo agora salva os dados numéricos de verdade blindando a estrutura!
-        await window.meuSupabase.from('partidas').insert([{ carreira_id: carreiraAtualId, adversario: adv, gols_pro: parseInt(pro), gols_contra: parseInt(contra), fato_do_jogo: fatoJson, tweets_ia: tweets }]);
+        try {
+            const fetchIA = await fetch('/api/analisar-jogo', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ detalhesParaIA })
+            });
+
+            if(fetchIA.ok) {
+                const respostasIA = await fetchIA.json();
+                
+                let feedSocial = document.getElementById('feed-social');
+                if (feedSocial && feedSocial.innerHTML.includes('telefone está quieto')) feedSocial.innerHTML = '';
+                if (respostasIA.jornalista && feedSocial) {
+                    feedSocial.innerHTML = `<div class="bg-slate-800 p-4 rounded-xl shadow-lg border border-slate-700 mb-3"><p class="font-bold text-[10px] text-blue-400 mb-1 tracking-widest"><i class="fa-solid fa-newspaper"></i> GE E-SPORTS</p><p class="text-xs text-gray-200">${respostasIA.jornalista}</p></div>` + feedSocial.innerHTML;
+                }
+                
+                let feedAuxiliar = document.getElementById('feed-auxiliar');
+                if (feedAuxiliar && feedAuxiliar.innerHTML.includes('Aguardando final')) feedAuxiliar.innerHTML = '';
+                if (respostasIA.auxiliar && feedAuxiliar) {
+                    feedAuxiliar.innerHTML = `<div class="mb-3 border-b border-amber-800/50 pb-3"><p class="font-mono text-xs leading-relaxed text-amber-100/90 italic">"${respostasIA.auxiliar}"</p><p class="text-[9px] text-amber-500 font-bold mt-2 text-right">- Jogo vs ${adv}</p></div>` + feedAuxiliar.innerHTML;
+                }
+            } else {
+                console.error("Vercel falhou ao gerar AI Text.");
+            }
+        } catch(err) {
+            console.error(err);
+        }
+        
+        await window.meuSupabase.from('partidas').insert([{ carreira_id: carreiraAtualId, adversario: adv, gols_pro: parseInt(pro), gols_contra: parseInt(contra), fato_do_jogo: fatoJson }]);
         
         if (agendaAtual.length > 0 && agendaAtual[0].adversario === adv) {
             const jogoDeletado = agendaAtual[0];
             if (!jogoDeletado.id.startsWith('mock')) await window.meuSupabase.from('agenda').delete().eq('id', jogoDeletado.id);
             agendaAtual.shift(); renderizarListaJogos(agendaAtual);
         }
-
-        document.getElementById('feed-social').innerHTML = `<div class="bg-slate-800 p-4 rounded-xl shadow-lg border border-slate-700 mb-3"><p class="font-bold text-sm text-blue-400 mb-1"><i class="fa-solid fa-pen-nib"></i> @jornalista_ia</p><p class="text-sm text-gray-200">${tweets.jornalista}</p></div>`;
         
         document.getElementById('golsPro').value = "0"; document.getElementById('golsContra').value = "0";
         document.getElementById('containerGols').innerHTML = '<div class="flex gap-2"><input type="text" list="listaElencoFixo" placeholder="Jogador" class="flex-1 bg-slate-700 rounded-lg p-2.5 text-white text-sm outline-none"><input type="number" min="1" value="1" class="w-14 bg-slate-700 rounded-lg p-2.5 text-white text-sm outline-none text-center"><button type="button" onclick="this.parentElement.remove()" class="text-red-500 px-1 hover:text-red-400"><i class="fa-solid fa-trash"></i></button></div>';
@@ -396,8 +309,6 @@ window.criarCarreira = async function() {
     } catch(e) {}
 }
 
-async function simularIAGemini(adv, pro, contra, detalhes) {
-    return new Promise(res => setTimeout(() => res({ jornalista: `Boa vitória! PC mostrou repertório tático.`, influencer: `AMASSAMOS O ${adv.toUpperCase()}! 🔥` }), 1000));
-}
+
 
 iniciarApp();
