@@ -519,7 +519,11 @@ window.salvarPartida = async function() {
         }
         
         if (updatesJogadores.length > 0) {
-            await window.meuSupabase.from('jogadores').upsert(updatesJogadores);
+            const { error: upsertErr } = await window.meuSupabase.from('jogadores').upsert(updatesJogadores);
+            if (upsertErr) {
+                alert("Falha Supersônica do Banco de Dados: " + upsertErr.message);
+                throw upsertErr;
+            }
             await window.carregarElenco(); // Refresh silently
         }
 
@@ -592,11 +596,15 @@ window.salvarPartida = async function() {
             console.error(err);
         }
         
-        await window.meuSupabase.from('partidas').insert([{ carreira_id: carreiraAtualId, adversario: adv, gols_pro: parseInt(pro), gols_contra: parseInt(contra), fato_do_jogo: fatoJson }]);
+        const { error: partidaErr } = await window.meuSupabase.from('partidas').insert([{ carreira_id: carreiraAtualId, adversario: adv, gols_pro: parseInt(pro), gols_contra: parseInt(contra), fato_do_jogo: fatoJson }]);
+        if (partidaErr) throw new Error("Supabase: " + partidaErr.message);
         
         if (agendaAtual.length > 0 && agendaAtual[0].adversario === adv) {
             const jogoDeletado = agendaAtual[0];
-            if (!jogoDeletado.id.startsWith('mock')) await window.meuSupabase.from('agenda').delete().eq('id', jogoDeletado.id);
+            if (!jogoDeletado.id.startsWith('mock')) {
+                const { error: agendaErr } = await window.meuSupabase.from('agenda').delete().eq('id', jogoDeletado.id);
+                if (agendaErr) console.warn("Erro ao apagar agenda:", agendaErr.message);
+            }
             agendaAtual.shift(); renderizarListaJogos(agendaAtual);
         }
         
@@ -655,7 +663,8 @@ window.salvarNovoJogo = async function() {
         };
         if(dateE) payload.data_jogo = dateE;
         
-        await window.meuSupabase.from('agenda').insert([payload]);
+        const { error } = await window.meuSupabase.from('agenda').insert([payload]);
+        if(error) throw new Error("DB Error: " + error.message);
         
         document.getElementById('novoJogoAdv').value = '';
         fecharModal('modal-jogo');
@@ -673,13 +682,14 @@ window.salvarNovoJogador = async function() {
     
     document.getElementById('btnSaveJogador').innerText = "Assinando...";
     try {
-        await window.meuSupabase.from('jogadores').insert([{
+        const { error } = await window.meuSupabase.from('jogadores').insert([{
             nome: nome,
             posicao: pos,
             energia: 100,
             moral: 'Boa',
             partidas_jogadas: 0
         }]);
+        if (error) throw new Error("DB Error: " + error.message);
         
         document.getElementById('novoJogNome').value = '';
         fecharModal('modal-jogador');
