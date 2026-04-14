@@ -35,23 +35,15 @@ window.carregarElenco = async function() {
 
 window.popularSeletorSúmula = function() {
     let html = '';
-    let squadHtml = '';
     
-    if (elencoFixo.length === 0) {
-        squadHtml = '<div class="text-center p-6 text-gray-500 text-xs">Nenhum jogador cadastrado.</div>';
-    } else {
+    if (elencoFixo.length > 0) {
         elencoFixo.forEach(jogador => {
             html += `<option value="${jogador.nome}"></option>`;
-            let pos = jogador.posicao ? `<span class="text-[9px] bg-zinc-800 px-1.5 py-0.5 rounded text-zinc-400 font-bold border border-zinc-700">${jogador.posicao}</span>` : '';
-            squadHtml += `<div class="py-2.5 flex justify-between items-center"><span class="font-medium text-sm text-zinc-200">${jogador.nome}</span> ${pos}</div>`;
         });
     }
     
     const dataList = document.getElementById('listaElencoFixo');
     if (dataList) dataList.innerHTML = html;
-    
-    const displayElenco = document.getElementById('listaElencoDisplay');
-    if (displayElenco) displayElenco.innerHTML = squadHtml;
 }
 
 window.adicionarLinhaGol = function() {
@@ -128,6 +120,55 @@ window.carregarRankings = async function() {
             htmlAssists += `<div class="flex justify-between items-center bg-zinc-950 p-3 rounded-lg border border-zinc-800 shadow-sm"><span class="font-medium text-sm text-zinc-300"><span class="mr-2 text-zinc-500 font-bold">${icone}.</span> ${j.nome}</span><span class="text-zinc-100 text-sm font-bold bg-zinc-800 px-2.5 py-0.5 rounded">${j.assists}</span></div>`;
         });
         document.getElementById('rankingAssists').innerHTML = htmlAssists || '<p class="text-xs text-zinc-600 text-center py-4">Faltam assistências.</p>';
+
+        // RENDERIZAÇÃO DO ELENCO PROFUNDO
+        let htmlPlantel = '';
+        elencoFixo.forEach(jogador => {
+            // Merge
+            let jStats = statsJogadores[jogador.nome] || { gols: 0, assists: 0 };
+            
+            // Lógica Energia
+            let energiaNum = parseInt(jogador.energia) || 100;
+            let energiaColor = energiaNum > 70 ? 'bg-emerald-500' : (energiaNum > 40 ? 'bg-amber-500' : 'bg-rose-500');
+            
+            // Lógica Moral
+            let mStr = (jogador.moral || '').toLowerCase();
+            let moralIcon = '😐';
+            if (mStr === 'excelente') moralIcon = '🔥';
+            else if (mStr === 'boa') moralIcon = '🙂';
+            else if (mStr === 'baixa') moralIcon = '😡';
+
+            htmlPlantel += `
+            <div class="bg-zinc-900 border border-zinc-800 p-4 rounded-xl shadow-lg relative overflow-hidden transition">
+                <div class="flex justify-between items-start mb-3">
+                    <div>
+                        <div class="flex items-center gap-2 mb-0.5">
+                            <span class="text-[9px] font-bold bg-zinc-800 px-1.5 py-0.5 rounded text-zinc-400 border border-zinc-700 uppercase tracking-widest">${jogador.posicao || 'N/A'}</span>
+                            <span class="text-[10px] text-zinc-500" title="Moral: ${jogador.moral}">Moral: ${moralIcon}</span>
+                        </div>
+                        <h4 class="font-bold text-zinc-100 mt-1">${jogador.nome}</h4>
+                    </div>
+                    <div class="flex gap-2 text-[10px] bg-zinc-950 border border-zinc-800 px-2 py-1 rounded-md text-zinc-400 font-semibold h-fit">
+                        <span title="Gols Marcados"><i class="fa-solid fa-bullseye text-zinc-600 mr-0.5"></i> ${jStats.gols}</span>
+                        <span title="Assistências"><i class="fa-solid fa-share-nodes text-zinc-600 mr-0.5 ml-1"></i> ${jStats.assists}</span>
+                    </div>
+                </div>
+                
+                <!-- Energy Bar -->
+                <div>
+                    <div class="flex justify-between text-[9px] font-bold uppercase tracking-widest text-zinc-500 mb-1">
+                        <span>Energia Física</span>
+                        <span>${energiaNum}%</span>
+                    </div>
+                    <div class="w-full bg-zinc-950 h-1.5 rounded-full overflow-hidden border border-zinc-800">
+                        <div class="h-full ${energiaColor} transition-all duration-500" style="width: ${energiaNum}%"></div>
+                    </div>
+                </div>
+            </div>`;
+        });
+        
+        let containerPlantel = document.getElementById('listaPlantel');
+        if (containerPlantel) containerPlantel.innerHTML = htmlPlantel || '<p class="text-xs text-zinc-600 text-center py-4">Nenhum jogador no plantel.</p>';
 
     } catch(e) { console.error(e); }
 }
