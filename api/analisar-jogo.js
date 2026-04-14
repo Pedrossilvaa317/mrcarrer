@@ -53,7 +53,13 @@ Analise a imagem minuciosamente para extrair essas informações com base no for
         return res.status(200).json(dados);
         
     } catch (error) {
-        console.error("Erro na API do Gemini:", error);
-        return res.status(500).json({ error: error.message });
+        try {
+            const fetchReq = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${process.env.GEMINI_API_KEY}`);
+            const data = await fetchReq.json();
+            const modelos = data.models ? data.models.map(m => m.name.replace('models/', '')).filter(n => n.includes('gemini')).join(' | ') : "Nenhum";
+            return res.status(500).json({ error: `O seu modelo (1.5-pro) não existe mais ou está restrito. Os modelos VÁLIDOS para a sua chave hoje são: ${modelos}` });
+        } catch(e) {
+            return res.status(500).json({ error: error.message });
+        }
     }
 }
