@@ -192,52 +192,77 @@ window.mudarTela = function(idTela, titulo, icone) {
 window.processarImagemVAR = function(input) {
     if (input.files && input.files[0]) {
         const file = input.files[0];
+        const btnVar = document.getElementById('btnVAR');
+        const originalText = btnVar.innerHTML;
+        btnVar.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> OTIMIZANDO FOTO...`;
+        btnVar.disabled = true;
+
         const reader = new FileReader();
-        
-        reader.onload = async function(e) {
-            const base64completo = e.target.result;
-            const apenasBase64 = base64completo.split(',')[1];
-            
-            // Extrai dinamicamente o mimeType para evitar erro caso seja um PNG ou WebP
-            const mimeTypeMatch = base64completo.match(/^data:(image\/[a-zA-Z]*);base64,/);
-            const formatoValido = mimeTypeMatch ? mimeTypeMatch[1] : 'image/jpeg';
-            
-            const btnVar = document.getElementById('btnVAR');
-            const originalText = btnVar.innerHTML;
-            btnVar.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> VAR ANALISANDO...`;
-            btnVar.disabled = true;
+        reader.onload = function(e) {
+            const img = new Image();
+            img.onload = async function() {
+                // Redimensiona usando Canvas para despencar o tamanho do Base64 (Evita Vercel 413 Payload Too Large)
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+                const maxDim = 1200;
 
-            try {
-                const resposta = await fetch('/api/analisar-jogo', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ imagemBase64: apenasBase64, mimeType: formatoValido })
-                });
+                if (width > height && width > maxDim) {
+                    height *= maxDim / width;
+                    width = maxDim;
+                } else if (height > maxDim) {
+                    width *= maxDim / height;
+                    height = maxDim;
+                }
 
-                if (!resposta.ok) throw new Error("A sala de controle não respondeu.");
-                
-                const dados = await resposta.json();
-                preencherSumulaVAR(dados);
-                
-                btnVar.innerHTML = `<i class="fa-solid fa-check text-xl"></i> SÚMULA PREENCHIDA!`;
-                btnVar.classList.replace('bg-blue-600', 'bg-green-600');
-                btnVar.classList.replace('border-blue-400', 'border-green-400');
-                
-                // Atualizar barra de cima confirmando acidez da foto
-                document.getElementById('btnSalvar').innerHTML = "Salvar e Coletiva 🎙️ (VAR Lido Confirmado!)";
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
 
-                setTimeout(() => {
+                // Força compressão JPEG leve
+                const base64completo = canvas.toDataURL('image/jpeg', 0.82);
+                const apenasBase64 = base64completo.split(',')[1];
+                const formatoValido = 'image/jpeg';
+                
+                btnVar.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> VAR ANALISANDO...`;
+
+                try {
+                    const resposta = await fetch('/api/analisar-jogo', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ imagemBase64: apenasBase64, mimeType: formatoValido })
+                    });
+
+                    if (!resposta.ok) {
+                        let erroSrv = "";
+                        try { const j = await resposta.json(); erroSrv = j.error || "Erro Interno"; } catch(x){ erroSrv = resposta.statusText; }
+                        throw new Error(`Servidor rejeitou [${resposta.status}]: ${erroSrv}`);
+                    }
+                    
+                    const dados = await resposta.json();
+                    preencherSumulaVAR(dados);
+                    
+                    btnVar.innerHTML = `<i class="fa-solid fa-check text-xl"></i> SÚMULA PREENCHIDA!`;
+                    btnVar.classList.replace('bg-blue-600', 'bg-green-600');
+                    btnVar.classList.replace('border-blue-400', 'border-green-400');
+                    
+                    document.getElementById('btnSalvar').innerHTML = "Salvar e Coletiva 🎙️ (VAR Lido Confirmado!)";
+
+                    setTimeout(() => {
+                        btnVar.innerHTML = originalText;
+                        btnVar.classList.replace('bg-green-600', 'bg-blue-600');
+                        btnVar.classList.replace('border-green-400', 'border-blue-400');
+                        btnVar.disabled = false;
+                    }, 4000);
+
+                } catch(err) {
+                    alert("Decisão de Campo mantida (Erro no VAR): " + err.message);
                     btnVar.innerHTML = originalText;
-                    btnVar.classList.replace('bg-green-600', 'bg-blue-600');
-                    btnVar.classList.replace('border-green-400', 'border-blue-400');
                     btnVar.disabled = false;
-                }, 4000);
-
-            } catch(err) {
-                alert("Decisão de Campo mantida (Erro no VAR): " + err.message);
-                btnVar.innerHTML = originalText;
-                btnVar.disabled = false;
-            }
+                }
+            };
+            img.src = e.target.result;
         };
         
         reader.readAsDataURL(file); // Trigger
