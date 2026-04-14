@@ -18,7 +18,7 @@ export default async function handler(req, res) {
         if (!imagemBase64) return res.status(400).json({ error: 'Imagem não fornecida' });
 
         const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
         const prompt = `
 Você é um especialista em análise de estatísticas de futebol (escaneamento de Súmulas/Telas de Fim de Jogo de eSports, como EA FC / FIFA).
@@ -53,13 +53,7 @@ Analise a imagem minuciosamente para extrair essas informações com base no for
         return res.status(200).json(dados);
         
     } catch (error) {
-        try {
-            const fetchReq = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${process.env.GEMINI_API_KEY}`);
-            const data = await fetchReq.json();
-            const modelos = data.models ? data.models.map(m => m.name.replace('models/', '')).filter(n => n.includes('gemini')).join(' | ') : "Nenhum";
-            return res.status(500).json({ error: `O seu modelo (1.5-pro) não existe mais ou está restrito. Os modelos VÁLIDOS para a sua chave hoje são: ${modelos}` });
-        } catch(e) {
-            return res.status(500).json({ error: error.message });
-        }
+        console.error("Erro no VAR (Gemini API):", error);
+        return res.status(500).json({ error: error.message });
     }
 }
