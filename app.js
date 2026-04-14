@@ -198,6 +198,10 @@ window.processarImagemVAR = function(input) {
             const base64completo = e.target.result;
             const apenasBase64 = base64completo.split(',')[1];
             
+            // Extrai dinamicamente o mimeType para evitar erro caso seja um PNG ou WebP
+            const mimeTypeMatch = base64completo.match(/^data:(image\/[a-zA-Z]*);base64,/);
+            const formatoValido = mimeTypeMatch ? mimeTypeMatch[1] : 'image/jpeg';
+            
             const btnVar = document.getElementById('btnVAR');
             const originalText = btnVar.innerHTML;
             btnVar.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> VAR ANALISANDO...`;
@@ -207,7 +211,7 @@ window.processarImagemVAR = function(input) {
                 const resposta = await fetch('/api/analisar-jogo', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ imagemBase64: apenasBase64 })
+                    body: JSON.stringify({ imagemBase64: apenasBase64, mimeType: formatoValido })
                 });
 
                 if (!resposta.ok) throw new Error("A sala de controle não respondeu.");

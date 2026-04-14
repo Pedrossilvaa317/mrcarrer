@@ -1,4 +1,3 @@
-import Object from 'node:util';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 export const config = {
@@ -15,7 +14,7 @@ export default async function handler(req, res) {
     }
 
     try {
-        const { imagemBase64 } = req.body;
+        const { imagemBase64, mimeType } = req.body;
         if (!imagemBase64) return res.status(400).json({ error: 'Imagem não fornecida' });
 
         const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
@@ -42,7 +41,7 @@ Analise a imagem minuciosamente para extrair essas informações com base no for
             {
                 inlineData: {
                     data: imagemBase64,
-                    mimeType: "image/jpeg"
+                    mimeType: mimeType || "image/jpeg"
                 }
             }
         ]);
