@@ -148,18 +148,18 @@
             </section>
 
             <section class="bg-zinc-900 p-5 rounded-2xl shadow-xl border border-zinc-800">
-                <h2 class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-4 flex items-center gap-2">4. Vestiário</h2>
-                <div id="miniCardsAvaliacao" class="grid grid-cols-1 gap-2 max-h-60 overflow-y-auto hide-scrollbar">
-                    <p class="text-xs text-zinc-600 text-center py-2">Carregando plantel...</p>
-                </div>
-            </section>
-
-            <section class="bg-zinc-900 p-5 rounded-2xl shadow-xl border border-zinc-800">
-                <h2 class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-3 flex items-center gap-2">5. Relatório Técnico</h2>
+                <h2 class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-3 flex items-center gap-2">4. Relatório Técnico</h2>
                 <textarea id="fatoDoJogo" rows="3" placeholder="Sintetize a performance tática do jogo..." class="w-full bg-zinc-950 border border-zinc-800 focus:border-zinc-600 transition rounded-lg p-3 text-zinc-200 outline-none text-sm leading-relaxed resiz-none"></textarea>
             </section>
 
-            <button id="btnSalvar" onclick="salvarPartida()" class="w-full bg-zinc-100 text-zinc-950 hover:bg-white transition font-bold py-4 rounded-xl uppercase tracking-widest shadow-lg mt-2 mb-4 text-sm">Registrar & IA Feedback</button>
+            <section class="bg-zinc-900 p-5 rounded-2xl shadow-xl border border-zinc-800">
+                <h2 class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-4 flex items-center gap-2">5. Avaliação do Plantel</h2>
+                <div id="miniCardsAvaliacao" class="grid grid-cols-1 gap-2">
+                    <div class="text-center p-4 text-zinc-600 text-xs">Sincronizando elenco...</div>
+                </div>
+            </section>
+
+            <button id="btnSalvar" onclick="salvarPartida()" class="w-full bg-zinc-100 text-zinc-950 hover:bg-white transition font-bold py-4 rounded-xl uppercase tracking-widest shadow-lg mt-4 mb-4 text-sm">Registrar & IA Feedback</button>
         </div>
 
         <div id="tela-calendario" class="tab-content hidden space-y-4">

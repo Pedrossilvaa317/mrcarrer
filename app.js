@@ -4,7 +4,6 @@ window.meuSupabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 var carreiraAtualId = null;
 var agendaAtual = [];
 var elencoFixo = [];
-window.estadoAvaliacao = {};
 
 async function iniciarApp() {
     try {
@@ -30,45 +29,54 @@ window.carregarElenco = async function() {
         const { data, error } = await window.meuSupabase.from('jogadores').select('*').order('nome', { ascending: true });
         if (!error && data) {
             elencoFixo = data;
-            window.renderizarAvaliacaoRapida();
+            if(window.renderizarAvaliacaoRapida) window.renderizarAvaliacaoRapida();
         }
     } catch(e) { console.error(e); }
 }
 
 window.renderizarAvaliacaoRapida = function() {
     let container = document.getElementById('miniCardsAvaliacao');
-    if (!container) return;
+    if(!container) return;
+    if(elencoFixo.length === 0) {
+        container.innerHTML = '<div class="text-center p-4 text-zinc-600 text-xs">Elenco vazio. Sincronize a base.</div>';
+        return;
+    }
     
     let html = '';
-    elencoFixo.forEach(jogador => {
-        window.estadoAvaliacao[jogador.id] = null; // Default neutro
-        
+    elencoFixo.forEach(jog => {
         html += `
-        <div class="bg-zinc-950 p-2.5 rounded-lg border border-zinc-800 flex justify-between items-center shadow-inner">
-            <span class="text-[11px] font-bold text-zinc-300 w-1/2 line-clamp-1">${jogador.nome}</span>
-            <div class="flex gap-2">
-                <button type="button" id="btn_frio_${jogador.id}" onclick="selecionarAvaliacao('${jogador.id}', 'frio')" class="w-8 h-8 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-xs hover:scale-110 transition active:scale-95 text-opacity-50 grayscale shadow">🥶</button>
-                <button type="button" id="btn_neutro_${jogador.id}" onclick="selecionarAvaliacao('${jogador.id}', 'neutro')" class="w-8 h-8 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-xs hover:scale-110 transition active:scale-95 text-opacity-50 grayscale shadow">😐</button>
-                <button type="button" id="btn_fogo_${jogador.id}" onclick="selecionarAvaliacao('${jogador.id}', 'fogo')" class="w-8 h-8 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-xs hover:scale-110 transition active:scale-95 text-opacity-50 grayscale shadow">🔥</button>
+        <div class="bg-zinc-950 border border-zinc-800 p-2.5 rounded-xl flex justify-between items-center transition" data-id="${jog.id}" data-nome="${jog.nome}" data-energia="${jog.energia || 100}" data-avaliacao="">
+            <span class="text-[11px] font-semibold text-zinc-200 tracking-wider flex items-center gap-2">
+                <span class="text-[8px] text-zinc-500 bg-zinc-800 px-1 py-0.5 rounded uppercase border border-zinc-700">${jog.posicao || '-'}</span> 
+                ${jog.nome}
+            </span>
+            <div class="flex gap-1.5">
+                <button type="button" onclick="setAvaliacao(this, 'frio')" class="btn-aval w-7 h-7 rounded-full bg-zinc-800 border border-zinc-700 flex justify-center items-center opacity-40 hover:opacity-100 transition text-[10px]">🥶</button>
+                <button type="button" onclick="setAvaliacao(this, 'neutro')" class="btn-aval w-7 h-7 rounded-full bg-zinc-800 border border-zinc-700 flex justify-center items-center opacity-40 hover:opacity-100 transition text-[10px]">😐</button>
+                <button type="button" onclick="setAvaliacao(this, 'fogo')" class="btn-aval w-7 h-7 rounded-full bg-zinc-800 border border-zinc-700 flex justify-center items-center opacity-40 hover:opacity-100 transition text-[10px]">🔥</button>
             </div>
         </div>`;
     });
     container.innerHTML = html;
 }
 
-window.selecionarAvaliacao = function(jogadorId, tipo) {
-    document.getElementById(`btn_frio_${jogadorId}`).className = "w-8 h-8 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-xs hover:scale-110 transition active:scale-95 text-opacity-50 grayscale shadow";
-    document.getElementById(`btn_neutro_${jogadorId}`).className = "w-8 h-8 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-xs hover:scale-110 transition active:scale-95 text-opacity-50 grayscale shadow";
-    document.getElementById(`btn_fogo_${jogadorId}`).className = "w-8 h-8 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-xs hover:scale-110 transition active:scale-95 text-opacity-50 grayscale shadow";
+window.setAvaliacao = function(btn, tipo) {
+    const parent = btn.parentElement.parentElement;
+    parent.setAttribute('data-avaliacao', tipo);
     
-    if (window.estadoAvaliacao[jogadorId] === tipo) {
-        window.estadoAvaliacao[jogadorId] = null;
-    } else {
-        window.estadoAvaliacao[jogadorId] = tipo;
-        if (tipo === 'frio') { document.getElementById(`btn_frio_${jogadorId}`).classList.replace('bg-zinc-800', 'bg-blue-600'); document.getElementById(`btn_frio_${jogadorId}`).classList.replace('border-zinc-700', 'border-blue-500'); document.getElementById(`btn_frio_${jogadorId}`).classList.remove('grayscale', 'text-opacity-50'); }
-        if (tipo === 'neutro') { document.getElementById(`btn_neutro_${jogadorId}`).classList.replace('bg-zinc-800', 'bg-zinc-500'); document.getElementById(`btn_neutro_${jogadorId}`).classList.replace('border-zinc-700', 'border-zinc-400'); document.getElementById(`btn_neutro_${jogadorId}`).classList.remove('grayscale', 'text-opacity-50'); }
-        if (tipo === 'fogo') { document.getElementById(`btn_fogo_${jogadorId}`).classList.replace('bg-zinc-800', 'bg-orange-600'); document.getElementById(`btn_fogo_${jogadorId}`).classList.replace('border-zinc-700', 'border-orange-500'); document.getElementById(`btn_fogo_${jogadorId}`).classList.remove('grayscale', 'text-opacity-50'); }
-    }
+    // Reseta irmãos
+    parent.querySelectorAll('.btn-aval').forEach(b => {
+        b.classList.remove('bg-rose-500', 'bg-blue-500', 'bg-zinc-500', 'opacity-100', 'border-transparent', 'scale-110');
+        b.classList.add('bg-zinc-800', 'opacity-40', 'border-zinc-700');
+    });
+    
+    // Ativa este
+    btn.classList.remove('bg-zinc-800', 'opacity-40', 'border-zinc-700');
+    btn.classList.add('opacity-100', 'border-transparent', 'scale-110');
+    
+    if(tipo === 'fogo') btn.classList.add('bg-rose-500');
+    if(tipo === 'neutro') btn.classList.add('bg-zinc-500');
+    if(tipo === 'frio') btn.classList.add('bg-blue-500');
 }
 
 window.popularSeletorSúmula = function() {
@@ -343,6 +351,50 @@ window.salvarPartida = async function() {
     
     document.getElementById('btnSalvar').innerHTML = "Enviando... ⏳";
     try {
+        // Lógica Tinder do Vestiário (Avaliação Rápida)
+        let resultPlacar = "Boa";
+        let proNum = parseInt(pro) || 0;
+        let conNum = parseInt(contra) || 0;
+        if (proNum > conNum) resultPlacar = "Excelente";
+        else if (proNum < conNum) resultPlacar = "Baixa";
+        
+        let updatesJogadores = [];
+        const containerCards = document.getElementById('miniCardsAvaliacao');
+        if (containerCards) {
+            containerCards.querySelectorAll('div[data-id]').forEach(card => {
+                let idJog = card.getAttribute('data-id');
+                let aval = card.getAttribute('data-avaliacao');
+                let energiaBase = parseInt(card.getAttribute('data-energia')) || 100;
+                
+                let novaEnergia = energiaBase;
+                let novaMoral = resultPlacar;
+                
+                if (aval === 'fogo') {
+                    novaMoral = 'Excelente';
+                    novaEnergia = Math.max(0, energiaBase - 15);
+                } else if (aval === 'neutro') {
+                    novaEnergia = Math.max(0, energiaBase - 20);
+                } else if (aval === 'frio') {
+                    novaMoral = 'Baixa';
+                    novaEnergia = Math.max(0, energiaBase - 25);
+                } else {
+                    // Cuidado Físico pro Reserva (Recupera +15)
+                    novaEnergia = Math.min(100, energiaBase + 15);
+                }
+                
+                updatesJogadores.push({
+                    id: idJog,
+                    energia: novaEnergia,
+                    moral: novaMoral
+                });
+            });
+        }
+        
+        if (updatesJogadores.length > 0) {
+            await window.meuSupabase.from('jogadores').upsert(updatesJogadores);
+            await window.carregarElenco(); // Refresh silently
+        }
+
         const parseDinamico = (containerId) => {
             let nomes = [];
             const container = document.getElementById(containerId);
@@ -426,43 +478,8 @@ window.salvarPartida = async function() {
         document.getElementById('amarelos').value = ""; document.getElementById('vermelhos').value = "";
         document.getElementById('lesoes').value = ""; document.getElementById('fatoDoJogo').value = "";
         
-        // UPDATE EM MASSA (ENERGIA E MORAL) - VESTIÁRIO TINDER //
-        let placarMoralBase = 'Boa';
-        let golsTime = parseInt(pro);
-        let golsAdv = parseInt(contra);
-        if (golsTime > golsAdv) placarMoralBase = 'Excelente';
-        if (golsTime < golsAdv) placarMoralBase = 'Baixa';
-
-        let updatesAvaliacao = [];
-        elencoFixo.forEach(jogador => {
-            let energiaAtual = parseInt(jogador.energia) || 100;
-            let ava = window.estadoAvaliacao[jogador.id];
-            
-            let novaMoral = placarMoralBase;
-            let novaEnergia = energiaAtual;
-
-            if (ava === 'fogo') {
-                novaMoral = 'Excelente';
-                novaEnergia = Math.max(0, energiaAtual - 15);
-            } else if (ava === 'neutro') {
-                novaEnergia = Math.max(0, energiaAtual - 20);
-            } else if (ava === 'frio') {
-                novaMoral = 'Baixa';
-                novaEnergia = Math.max(0, energiaAtual - 25);
-            } else {
-                novaEnergia = Math.min(100, energiaAtual + 15); // Descansou
-            }
-
-            // Garante que é numérico pro supabase
-            if(isNaN(novaEnergia)) novaEnergia = 100;
-
-            updatesAvaliacao.push(
-                window.meuSupabase.from('jogadores').update({ moral: novaMoral, energia: novaEnergia }).eq('id', jogador.id)
-            );
-        });
-        
-        await Promise.all(updatesAvaliacao);
-        await window.carregarElenco(); // Recarrega os dados com as energias frescas
+        // Reseta os cards do Tinder do Vestiario
+        if (window.renderizarAvaliacaoRapida) window.renderizarAvaliacaoRapida();
         
         atualizarDashboard(); 
         carregarRankings(); // RECALCULA O RANKING COM OS DADOS NOVOS!
