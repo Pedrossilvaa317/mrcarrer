@@ -51,6 +51,6 @@ Retorne EXATAMENTE UM objeto JSON válido com essas duas chaves (jornalista e au
 
     } catch (error) {
         console.error("Erro na Análise Pós Jogo:", error);
-        return res.status(500).json({ error: 'Falha da IA: ' + error.message, jornalista: "Sem coletiva hoje.", auxiliar: "Apagão no servidor, professor." });
+        return res.status(200).json({ jornalista: "Sem coletiva hoje.", auxiliar: "Apagão no servidor da IA, professor. Estamos sem comunicação externa." });
     }
 }

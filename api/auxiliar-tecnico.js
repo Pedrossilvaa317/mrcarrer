@@ -20,16 +20,15 @@ export default async function handler(req, res) {
 
         const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
         
-        // Usamos a 2.5 Flash por ser extremamente instântanea e ideal para esse tipo de payload rápido
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
         
-        const prompt = `Tu és um Auxiliar Técnico de futebol brasileiro experiente e leal. Com base nestas estatísticas do meu time (Vitórias: ${vitorias}, Empates: ${empates}, Derrotas: ${derrotas}), e sabendo que o próximo jogo é contra ${adversario}, dá-me um conselho tático ou motivacional curto (máximo 2 linhas) com uma pitada de personalidade de quem está no balneário e usa gírias pontuais da bola. Não uses formatações como negrito (*), apenas texto limpo.`;
+        const prompt = `Tu és um Auxiliar Técnico de futebol brasileiro experiente e leal. Com base nestas estatísticas do meu time (Vitórias: ${vitorias}, Empates: ${empates}, Derrotas: ${derrotas}), e sabendo que o próximo jogo é contra ${adversario}, dá me um conselho tático ou motivacional curto (máximo 2 linhas) com uma pitada de personalidade de quem está no balneário e usa gírias pontuais da bola. Não uses formatações como negrito (*), apenas texto limpo.`;
 
         const result = await model.generateContent({
             contents: [{ role: 'user', parts: [{ text: prompt }] }],
             generationConfig: {
                 maxOutputTokens: 150,
-                temperature: 0.9, // Um pouco criativo para trazer frases diferentes todas as vezes
+                temperature: 0.9,
             }
         });
         
@@ -39,6 +38,6 @@ export default async function handler(req, res) {
 
     } catch (error) {
         console.error("Erro na Prancheta Pré-Jogo:", error);
-        return res.status(500).json({ error: 'O Assistente coringou.', text: 'Cara, tô sem comunicação aqui, vamo focar no treino que esse jogo vai ser duro!' });
+        return res.status(200).json({ conselho: 'Cara, tô sem comunicação com o banco de dados tático aqui. Vamo focar no treino que esse jogo vai ser duro!' });
     }
 }
