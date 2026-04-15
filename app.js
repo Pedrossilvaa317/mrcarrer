@@ -820,7 +820,7 @@ window.carregarCompeticoes = async function() {
             .from('competicoes')
             .select('*')
             .eq('carreira_id', carreiraAtualId)
-            .order('criado_em', { ascending: true });
+            .order('nome', { ascending: true });
 
         if (error) { console.error('carregarCompeticoes erro:', error.message); return; }
         competicoesAtivas = data || [];
@@ -873,7 +873,7 @@ window.abrirModalCompeticoes = async function() {
         const { data, error } = await window.meuSupabase
             .from('competicoes').select('*')
             .eq('carreira_id', carreiraAtualId)
-            .order('criado_em', { ascending: true });
+            .order('nome', { ascending: true });
         if (error) throw error;
         if (!data || data.length === 0) {
             lista.innerHTML = '<p class="text-xs text-zinc-600 text-center py-4 px-2">Nenhuma competição cadastrada ainda.</p>';
