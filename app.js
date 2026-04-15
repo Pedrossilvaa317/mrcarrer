@@ -464,6 +464,30 @@ window.simularIAGemini = async function(adv, pro, contra, detalhes) {
     };
 }
 
+// SUB-NAVEGAÇÃO DA ABA SOCIAL
+window.alternarFeedSocial = function(rede) {
+    const feedX    = document.getElementById('feed-x');
+    const feedInst = document.getElementById('feed-instagram');
+    const tabX     = document.getElementById('tab-x');
+    const tabInst  = document.getElementById('tab-instagram');
+
+    if (rede === 'x') {
+        feedX.classList.remove('hidden');    feedX.classList.add('block');
+        feedInst.classList.add('hidden');    feedInst.classList.remove('block');
+        tabX.classList.replace('text-zinc-500', 'text-zinc-100');
+        tabX.classList.replace('border-transparent', 'border-zinc-100');
+        tabInst.classList.replace('text-zinc-100', 'text-zinc-500');
+        tabInst.classList.replace('border-zinc-100', 'border-transparent');
+    } else {
+        feedInst.classList.remove('hidden'); feedInst.classList.add('block');
+        feedX.classList.add('hidden');       feedX.classList.remove('block');
+        tabInst.classList.replace('text-zinc-500', 'text-zinc-100');
+        tabInst.classList.replace('border-transparent', 'border-zinc-100');
+        tabX.classList.replace('text-zinc-100', 'text-zinc-500');
+        tabX.classList.replace('border-zinc-100', 'border-transparent');
+    }
+}
+
 window.salvarPartida = async function() {
     const adv = document.getElementById('adversario').value; const pro = document.getElementById('golsPro').value;
     const contra = document.getElementById('golsContra').value; const fato = document.getElementById('fatoDoJogo').value;
@@ -582,45 +606,94 @@ window.salvarPartida = async function() {
 
             if(fetchIA.ok) {
                 const respostasIA = await fetchIA.json();
-                
-                let feedSocial = document.getElementById('feed-social');
-                if (feedSocial && respostasIA.posts && respostasIA.posts.length > 0) {
-                    // Limpa placeholder inicial
-                    if (feedSocial.querySelector('p.text-zinc-600')) feedSocial.innerHTML = '';
 
-                    // Ícones e cores por rede
-                    const redesConfig = {
-                        'X':         { icon: 'fa-brands fa-x-twitter', bg: 'bg-zinc-950',  badge: 'bg-zinc-800 text-zinc-300',   border: 'border-zinc-700' },
-                        'Instagram': { icon: 'fa-brands fa-instagram',  bg: 'bg-zinc-950',  badge: 'bg-pink-900/50 text-pink-300', border: 'border-pink-900/50' }
-                    };
-                    const tiposConfig = {
-                        'clube':    { label: 'OFICIAL',   color: 'text-blue-400' },
-                        'midia':    { label: 'MÍDIA',     color: 'text-amber-400' },
-                        'torcedor': { label: 'TORCEDOR',  color: 'text-rose-400' }
-                    };
+                if (respostasIA.posts && respostasIA.posts.length > 0) {
+                    const feedX    = document.getElementById('feed-x');
+                    const feedInst = document.getElementById('feed-instagram');
 
-                    let novoHtml = '';
+                    // Limpa placeholders
+                    if (feedX    && feedX.querySelector('p'))    feedX.innerHTML    = '';
+                    if (feedInst && feedInst.querySelector('p')) feedInst.innerHTML = '';
+
                     respostasIA.posts.forEach(post => {
-                        const rede = redesConfig[post.rede] || redesConfig['X'];
-                        const tipo = tiposConfig[post.tipo] || tiposConfig['midia'];
-                        novoHtml += `
-                        <div class="${rede.bg} border ${rede.border} p-4 rounded-xl space-y-2 shadow-sm">
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center gap-2">
-                                    <i class="${rede.icon} text-sm text-zinc-400"></i>
-                                    <span class="text-[11px] font-bold text-zinc-200">${post.autor}</span>
-                                    <span class="text-[8px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded ${rede.badge}">${post.rede}</span>
+
+                        if (post.rede === 'X') {
+                            // ── TEMPLATE TWEET ──
+                            const card = document.createElement('div');
+                            card.className = 'bg-zinc-950 border border-zinc-800 p-4 rounded-2xl space-y-3 shadow-sm';
+                            card.innerHTML = `
+                                <div class="flex items-start gap-3">
+                                    <div class="w-10 h-10 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center flex-shrink-0">
+                                        <i class="fa-brands fa-x-twitter text-zinc-300 text-sm"></i>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-center justify-between">
+                                            <span class="text-[13px] font-bold text-zinc-100">${post.autor}</span>
+                                            <i class="fa-brands fa-x-twitter text-zinc-600 text-xs"></i>
+                                        </div>
+                                        <span class="text-[11px] text-zinc-500">${post.autor.toLowerCase()}</span>
+                                    </div>
                                 </div>
-                                <span class="text-[9px] font-bold uppercase tracking-widest ${tipo.color}">${tipo.label}</span>
-                            </div>
-                            <p class="text-xs text-zinc-300 leading-relaxed">${post.texto}</p>
-                            <div class="flex items-center gap-1 text-[10px] text-zinc-500 pt-1 border-t border-zinc-800/50">
-                                <i class="fa-solid fa-heart text-[9px]"></i>
-                                <span>${post.engajamento}</span>
-                            </div>
-                        </div>`;
+                                <p class="text-sm text-zinc-200 leading-relaxed pl-1">${post.texto}</p>
+                                <div class="flex items-center justify-between pt-2 border-t border-zinc-800/50 text-zinc-600 text-[11px]">
+                                    <div class="flex items-center gap-1.5 hover:text-rose-500 cursor-pointer transition">
+                                        <i class="fa-regular fa-heart"></i>
+                                        <span>${post.engajamento}</span>
+                                    </div>
+                                    <div class="flex items-center gap-1.5 hover:text-emerald-400 cursor-pointer transition">
+                                        <i class="fa-solid fa-retweet"></i>
+                                        <span>${Math.floor(Math.random()*500+50)}</span>
+                                    </div>
+                                    <div class="flex items-center gap-1.5 hover:text-blue-400 cursor-pointer transition">
+                                        <i class="fa-regular fa-comment"></i>
+                                        <span>${Math.floor(Math.random()*200+10)}</span>
+                                    </div>
+                                    <div class="flex items-center gap-1.5 hover:text-zinc-300 cursor-pointer transition">
+                                        <i class="fa-solid fa-arrow-up-from-bracket"></i>
+                                    </div>
+                                </div>`;
+                            feedX.prepend(card);
+
+                        } else if (post.rede === 'Instagram') {
+                            // ── TEMPLATE INSTAGRAM ──
+                            const card = document.createElement('div');
+                            card.className = 'bg-zinc-950 border border-zinc-800 rounded-2xl overflow-hidden shadow-sm';
+                            card.innerHTML = `
+                                <div class="flex items-center gap-3 p-3 border-b border-zinc-800/50">
+                                    <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-pink-600 via-rose-500 to-amber-400 p-0.5 flex-shrink-0">
+                                        <div class="w-full h-full rounded-full bg-zinc-950 flex items-center justify-center">
+                                            <i class="fa-brands fa-instagram text-pink-400 text-sm"></i>
+                                        </div>
+                                    </div>
+                                    <div class="flex-1">
+                                        <p class="text-[12px] font-bold text-zinc-100">${post.autor}</p>
+                                        <p class="text-[10px] text-zinc-500">Agora mesmo</p>
+                                    </div>
+                                    <i class="fa-solid fa-ellipsis text-zinc-600 text-sm cursor-pointer"></i>
+                                </div>
+                                <div class="w-full h-48 bg-zinc-900 flex flex-col items-center justify-center border-b border-zinc-800 gap-2">
+                                    <i class="fa-solid fa-camera text-zinc-700 text-3xl"></i>
+                                    <span class="text-[10px] text-zinc-700 uppercase tracking-widest font-bold">Foto da Partida</span>
+                                </div>
+                                <div class="p-3 space-y-2">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center gap-4 text-xl text-zinc-400">
+                                            <i class="fa-regular fa-heart cursor-pointer hover:text-rose-500 transition"></i>
+                                            <i class="fa-regular fa-comment cursor-pointer hover:text-zinc-200 transition"></i>
+                                            <i class="fa-regular fa-paper-plane cursor-pointer hover:text-zinc-200 transition"></i>
+                                        </div>
+                                        <i class="fa-regular fa-bookmark cursor-pointer hover:text-zinc-200 transition text-xl text-zinc-400"></i>
+                                    </div>
+                                    <p class="text-[12px] font-bold text-zinc-200">${post.engajamento} curtidas</p>
+                                    <p class="text-[12px] text-zinc-300 leading-relaxed"><span class="font-bold text-zinc-100">${post.autor}</span> ${post.texto}</p>
+                                    <p class="text-[11px] text-zinc-600 cursor-pointer">Ver todos os comentários...</p>
+                                </div>`;
+                            feedInst.prepend(card);
+                        }
                     });
-                    feedSocial.innerHTML = novoHtml + feedSocial.innerHTML;
+
+                    // Vai direto para a rede que teve mais posts (X por padrão)
+                    alternarFeedSocial('x');
                 }
             } else {
                 console.error("Vercel falhou ao gerar posts sociais.");
