@@ -109,7 +109,10 @@
 
             <!-- Container 2: Competições (Carrossel Horizontal) -->
             <div>
-                <h3 class="text-[11px] font-semibold text-zinc-500 tracking-wider mb-2.5 px-1 flex items-center gap-2 uppercase"><i class="fa-solid fa-trophy text-zinc-400"></i> Competições Ativas</h3>
+                <div class="flex justify-between items-center mb-2.5 px-1">
+                    <h3 class="text-[11px] font-semibold text-zinc-500 tracking-wider flex items-center gap-2 uppercase"><i class="fa-solid fa-trophy text-zinc-400"></i> Competições Ativas</h3>
+                    <button onclick="abrirSalaTrofeus()" class="bg-amber-500/10 text-amber-500 border border-amber-500/30 px-4 py-2 rounded-lg font-bold text-xs uppercase tracking-widest hover:bg-amber-500/20 transition"><i class="fa-solid fa-trophy"></i> Sala de Troféus</button>
+                </div>
                 <div id="homeCompeticoesCarrossel" class="flex overflow-x-auto gap-3 pb-2 snap-x snap-mandatory hide-scrollbar">
                     <!-- Preenchido via JS -->
                 </div>
@@ -357,6 +360,57 @@
                 <div class="flex gap-2">
                     <button onclick="fecharModal('modal-jogador')" class="flex-1 py-3 text-xs font-bold uppercase tracking-widest rounded-xl text-zinc-500 hover:text-zinc-300 transition">Cancelar</button>
                     <button onclick="salvarNovoJogador()" id="btnSaveJogador" class="flex-1 py-3 text-xs font-bold uppercase tracking-widest rounded-xl bg-amber-600 hover:bg-amber-500 text-white shadow-lg transition">Contratar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal: Sala de Troféus -->
+        <div id="modal-trofeus" class="fixed inset-0 z-[60] bg-zinc-950/95 backdrop-blur-sm flex justify-center items-start p-4 hidden overflow-y-auto">
+            <div class="bg-zinc-900 border border-amber-500/20 w-full max-w-sm rounded-2xl shadow-2xl relative mt-4 mb-4">
+                <div class="bg-gradient-to-r from-amber-950/40 to-zinc-900 px-5 py-4 border-b border-amber-500/20 flex justify-between items-center rounded-t-2xl">
+                    <div>
+                        <h2 class="text-base font-bold text-amber-400 uppercase tracking-widest flex items-center gap-2.5">
+                            <i class="fa-solid fa-trophy"></i> Sala de Troféus
+                        </h2>
+                        <p class="text-[10px] text-amber-500/50 uppercase tracking-widest mt-0.5 font-semibold">Glórias Conquistadas</p>
+                    </div>
+                    <button onclick="fecharModal('modal-trofeus')" class="text-zinc-500 hover:text-zinc-300 transition p-1.5 rounded-lg hover:bg-zinc-800">
+                        <i class="fa-solid fa-xmark text-lg"></i>
+                    </button>
+                </div>
+                <div class="p-4">
+                    <div id="gridTrofeus" class="grid grid-cols-2 gap-4"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal: Detalhe de Competição -->
+        <div id="modal-competicao" class="fixed inset-0 z-[60] bg-zinc-950/90 backdrop-blur-sm flex justify-center items-center p-4 hidden">
+            <div class="bg-zinc-900 border border-zinc-700 w-full max-w-sm rounded-2xl shadow-2xl relative overflow-hidden">
+                <div class="h-px bg-gradient-to-r from-transparent via-zinc-500 to-transparent"></div>
+                <div class="p-5">
+                    <div class="flex justify-between items-start mb-5">
+                        <div>
+                            <p class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-1">Competição</p>
+                            <h2 id="modalCompNome" class="text-xl font-bold text-zinc-100 uppercase tracking-tight">--</h2>
+                        </div>
+                        <button onclick="fecharModal('modal-competicao')" class="text-zinc-500 hover:text-zinc-300 transition p-1.5 rounded-lg hover:bg-zinc-800 mt-1">
+                            <i class="fa-solid fa-xmark text-lg"></i>
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3 mb-5">
+                        <div class="bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-center">
+                            <p class="text-[9px] font-bold uppercase tracking-widest text-zinc-500 mb-1.5">Fase Atual</p>
+                            <p id="modalCompFase" class="text-sm font-bold text-zinc-200">--</p>
+                        </div>
+                        <div class="bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-center">
+                            <p class="text-[9px] font-bold uppercase tracking-widest text-zinc-500 mb-1.5">Status</p>
+                            <p id="modalCompStatus" class="text-sm font-bold text-emerald-400">--</p>
+                        </div>
+                    </div>
+                    <button onclick="fecharModal('modal-competicao')" class="w-full py-3 text-xs font-bold uppercase tracking-widest rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-zinc-200 transition">
+                        Fechar
+                    </button>
                 </div>
             </div>
         </div>

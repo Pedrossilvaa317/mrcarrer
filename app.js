@@ -125,7 +125,7 @@ window.atualizarHomeDashboard = function(carreira) {
     ];
     comps.forEach(c => {
         carrosselHtml += `
-        <div class="min-w-[140px] snap-center bg-zinc-900 border border-zinc-800 rounded-xl p-3 shadow text-left flex-shrink-0">
+        <div onclick="abrirModalCompeticao('${c.nome}', '${c.fase}', '${c.status}')" class="min-w-[140px] snap-center bg-zinc-900 border border-zinc-800 rounded-xl p-3 shadow text-left flex-shrink-0 cursor-pointer hover:border-zinc-500 transition">
             <p class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-1 truncate">${c.nome}</p>
             <p class="text-sm font-bold text-zinc-200">${c.fase}</p>
             <p class="text-[9px] text-emerald-500 font-bold uppercase tracking-widest mt-1">${c.status}</p>
@@ -809,6 +809,54 @@ window.salvarNovoJogador = async function() {
         
     } catch(e) { alert("Erro ao assinar com jogador: " + e.message); }
     finally { document.getElementById('btnSaveJogador').innerText = "Contratar"; }
+}
+
+window.abrirModalCompeticao = function(nome, fase, status) {
+    document.getElementById('modalCompNome').innerText = nome;
+    document.getElementById('modalCompFase').innerText = fase;
+    document.getElementById('modalCompStatus').innerText = status;
+    abrirModal('modal-competicao');
+}
+
+window.abrirSalaTrofeus = async function() {
+    abrirModal('modal-trofeus');
+    const grid = document.getElementById('gridTrofeus');
+    grid.innerHTML = '<div class="col-span-2 text-center py-10"><i class="fa-solid fa-spinner fa-spin text-amber-500/40 text-2xl"></i></div>';
+
+    try {
+        const { data, error } = await window.meuSupabase
+            .from('trofeus')
+            .select('*')
+            .eq('carreira_id', carreiraAtualId);
+
+        if (error) throw error;
+
+        if (!data || data.length === 0) {
+            grid.innerHTML = `
+            <div class="col-span-2 text-center py-12 px-4">
+                <div class="text-5xl mb-5 opacity-10"><i class="fa-solid fa-trophy text-amber-400"></i></div>
+                <p class="text-amber-500/50 text-[11px] font-bold uppercase tracking-widest leading-relaxed">A prateleira está vazia.<br>É hora de fazer história.</p>
+            </div>`;
+            return;
+        }
+
+        let html = '';
+        data.forEach(t => {
+            html += `
+            <div class="bg-gradient-to-b from-zinc-800 to-zinc-950 border border-amber-500/30 rounded-xl p-4 flex flex-col items-center text-center gap-2 shadow-lg hover:border-amber-500/60 transition">
+                <div class="w-14 h-14 flex items-center justify-center mt-1">
+                    <i class="fa-solid fa-trophy text-4xl text-amber-400 drop-shadow-[0_0_10px_rgba(245,158,11,0.35)]"></i>
+                </div>
+                <p class="text-[11px] font-bold text-amber-300 uppercase tracking-wider leading-tight mt-1">${t.nome || 'Troféu'}</p>
+                <p class="text-[10px] text-zinc-500 font-semibold">${t.ano || '--'}</p>
+            </div>`;
+        });
+        grid.innerHTML = html;
+
+    } catch(e) {
+        grid.innerHTML = '<div class="col-span-2 text-center py-8 text-zinc-600 text-xs">Erro ao carregar troféus.</div>';
+        console.error('abrirSalaTrofeus:', e);
+    }
 }
 
 window.verificarSessao();
