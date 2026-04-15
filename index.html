@@ -388,8 +388,13 @@
                 <!-- Form nova competição -->
                 <div class="border-t border-zinc-800 p-4 space-y-3">
                     <p class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Nova Competição</p>
+                    <input type="text" id="novaCompNome" placeholder="Ex: Brasileirão Série A" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-zinc-100 outline-none focus:border-zinc-600 text-sm">
                     <div class="flex gap-2">
-                        <input type="text" id="novaCompNome" placeholder="Ex: Brasileirão Série A" class="flex-1 bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-zinc-100 outline-none focus:border-zinc-600 text-sm">
+                        <select id="novaCompTipo" class="flex-1 bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-zinc-100 outline-none focus:border-zinc-600 text-sm">
+                            <option value="liga">Liga — Pontos Corridos</option>
+                            <option value="copa">Copa — Mata-Mata</option>
+                            <option value="copa_grupos">Copa — Fase de Grupos</option>
+                        </select>
                         <input type="text" id="novaCompFase" placeholder="1ª Rodada" class="w-28 bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-zinc-100 outline-none focus:border-zinc-600 text-sm">
                     </div>
                     <div class="flex gap-2">

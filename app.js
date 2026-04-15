@@ -819,32 +819,35 @@ window.carregarCompeticoes = async function() {
 
         if (!error && data) {
             competicoesAtivas = data;
-            renderizarCarrosselCompeticoes(data);
+            renderizarCompeticoesHome(data);
             popularSelectCompeticoes();
         }
     } catch(e) { console.error('carregarCompeticoes:', e); }
 }
 
-function renderizarCarrosselCompeticoes(comps) {
+function renderizarCompeticoesHome(comps) {
     const el = document.getElementById('homeCompeticoesCarrossel');
     if (!el) return;
     if (!comps || comps.length === 0) {
-        el.innerHTML = `<div class="min-w-[200px] snap-center bg-zinc-900/40 border border-dashed border-zinc-800 rounded-xl p-4 text-center flex-shrink-0 flex flex-col items-center justify-center gap-1.5">
-            <i class="fa-solid fa-gear text-zinc-700 text-lg"></i>
-            <p class="text-[10px] text-zinc-600 font-bold uppercase tracking-widest">Cadastre competições<br>usando o botão Gerenciar</p>
-        </div>`;
+        el.innerHTML = `<div class="p-4 text-xs text-zinc-500 bg-zinc-900 border border-dashed border-zinc-700 rounded-xl snap-center flex-shrink-0 min-w-[240px]">Nenhuma competição ativa. Cadastre para começar.</div>`;
         return;
     }
-    let html = '';
-    comps.forEach(c => {
-        html += `
-        <div onclick="abrirModalCompeticao('${c.nome}', '${c.fase || '--'}', '${c.status || 'Em Andamento'}')" class="min-w-[140px] snap-center bg-zinc-900 border border-zinc-800 rounded-xl p-3 shadow text-left flex-shrink-0 cursor-pointer hover:border-zinc-500 transition">
-            <p class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-1 truncate">${c.nome}</p>
-            <p class="text-sm font-bold text-zinc-200">${c.fase || '--'}</p>
-            <p class="text-[9px] text-emerald-500 font-bold uppercase tracking-widest mt-1">${c.status || 'Em Andamento'}</p>
+    const badge = {
+        liga:        { label: 'LIGA',        cls: 'bg-blue-500/20 text-blue-400 border-blue-500/30' },
+        copa:        { label: 'COPA',        cls: 'bg-purple-500/20 text-purple-400 border-purple-500/30' },
+        copa_grupos: { label: 'COPA/GRUPOS', cls: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' }
+    };
+    el.innerHTML = comps.map(c => {
+        const b = badge[c.tipo] || badge.liga;
+        return `
+        <div onclick="abrirModalCompeticao('${c.nome}', '${c.fase || '--'}', '${c.status || 'Em Andamento'}')"
+             class="min-w-[155px] snap-center bg-zinc-900 border border-zinc-800 rounded-xl p-3 shadow text-left flex-shrink-0 cursor-pointer hover:border-zinc-500 transition space-y-1.5">
+            <span class="inline-block text-[8px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded border ${b.cls}">${b.label}</span>
+            <p class="text-[11px] text-zinc-200 font-bold leading-tight truncate">${c.nome}</p>
+            <p class="text-[10px] text-zinc-500 font-semibold">${c.fase || '--'}</p>
+            <p class="text-[9px] text-emerald-500 font-bold uppercase tracking-widest">${c.status || 'Em Andamento'}</p>
         </div>`;
-    });
-    el.innerHTML = html;
+    }).join('');
 }
 
 function popularSelectCompeticoes() {
@@ -890,6 +893,7 @@ window.abrirModalCompeticoes = async function() {
 window.salvarNovaCompeticao = async function() {
     const nome = document.getElementById('novaCompNome').value.trim();
     const fase = document.getElementById('novaCompFase').value.trim();
+    const tipo = document.getElementById('novaCompTipo').value || 'liga';
     if (!nome) return alert('Digite o nome da competição.');
     const btn = document.getElementById('btnSaveComp');
     btn.innerText = 'Salvando...';
@@ -898,13 +902,14 @@ window.salvarNovaCompeticao = async function() {
             carreira_id: carreiraAtualId,
             nome: nome,
             fase: fase || '1ª Fase',
+            tipo: tipo,
             status: 'Em Andamento'
         }]);
         if (error) throw error;
         document.getElementById('novaCompNome').value = '';
         document.getElementById('novaCompFase').value = '';
+        fecharModal('modal-competicoes');
         await carregarCompeticoes();
-        await window.abrirModalCompeticoes();
     } catch(e) { alert('Erro ao cadastrar: ' + e.message); }
     finally { btn.innerText = 'Cadastrar'; }
 }
