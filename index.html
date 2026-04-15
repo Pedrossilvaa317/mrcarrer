@@ -459,7 +459,7 @@
             </div>
         </div>
 
-        <!-- Modal: Detalhe de Competição -->
+        <!-- Modal: Detalhe e Edição de Competição -->
         <div id="modal-competicao" class="fixed inset-0 z-[60] bg-zinc-950/90 backdrop-blur-sm flex justify-center items-center p-4 hidden">
             <div class="bg-zinc-900 border border-zinc-700 w-full max-w-sm rounded-2xl shadow-2xl relative overflow-hidden">
                 <div class="h-px bg-gradient-to-r from-transparent via-zinc-500 to-transparent"></div>
@@ -473,20 +473,46 @@
                             <i class="fa-solid fa-xmark text-lg"></i>
                         </button>
                     </div>
-                    <div class="grid grid-cols-2 gap-3 mb-5">
-                        <div class="bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-center">
-                            <p class="text-[9px] font-bold uppercase tracking-widest text-zinc-500 mb-1.5">Fase Atual</p>
-                            <p id="modalCompFase" class="text-sm font-bold text-zinc-200">--</p>
+                    <div class="space-y-3 mb-5">
+                        <div>
+                            <label class="block text-[9px] font-bold uppercase tracking-widest text-zinc-500 mb-1.5">Fase Atual</label>
+                            <input type="text" id="modalCompFase" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-zinc-100 outline-none focus:border-zinc-600 text-sm font-bold">
                         </div>
-                        <div class="bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-center">
-                            <p class="text-[9px] font-bold uppercase tracking-widest text-zinc-500 mb-1.5">Status</p>
-                            <p id="modalCompStatus" class="text-sm font-bold text-emerald-400">--</p>
+                        <div>
+                            <label class="block text-[9px] font-bold uppercase tracking-widest text-zinc-500 mb-1.5">Status</label>
+                            <select id="modalCompStatus" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-zinc-100 outline-none focus:border-zinc-600 text-sm font-bold">
+                                <option value="Em Andamento">Em Andamento</option>
+                                <option value="Classificado">Classificado</option>
+                                <option value="Eliminado">Eliminado</option>
+                                <option value="Campeão">Campeão 🏆</option>
+                            </select>
                         </div>
                     </div>
-                    <button onclick="fecharModal('modal-competicao')" class="w-full py-3 text-xs font-bold uppercase tracking-widest rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-zinc-200 transition">
-                        Fechar
+                    <div class="flex gap-2">
+                        <button onclick="abrirHistoricoCompeticao()" class="flex-1 py-3 text-xs font-bold uppercase tracking-widest rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 transition flex items-center justify-center gap-1.5">
+                            <i class="fa-solid fa-clock-rotate-left text-[10px]"></i> Histórico
+                        </button>
+                        <button onclick="salvarEdicaoCompeticao()" id="btnSalvarComp" class="flex-1 py-3 text-xs font-bold uppercase tracking-widest rounded-xl bg-blue-600 hover:bg-blue-500 text-white shadow-lg transition">
+                            Salvar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal: Histórico da Competição -->
+        <div id="modal-historico-comp" class="fixed inset-0 z-[70] bg-zinc-950/95 backdrop-blur-sm flex justify-center items-start p-4 hidden overflow-y-auto">
+            <div class="bg-zinc-900 border border-zinc-800 w-full max-w-sm rounded-2xl shadow-2xl relative mt-4 mb-4">
+                <div class="bg-zinc-800/80 px-5 py-4 border-b border-zinc-700/50 flex justify-between items-center rounded-t-2xl">
+                    <div>
+                        <h2 id="modalHistCompNome" class="text-base font-bold text-zinc-100 uppercase tracking-widest">Histórico</h2>
+                        <p id="modalHistCompStats" class="text-[10px] text-zinc-500 uppercase tracking-widest mt-0.5 font-semibold">--</p>
+                    </div>
+                    <button onclick="fecharModal('modal-historico-comp')" class="text-zinc-500 hover:text-zinc-300 transition p-1.5 rounded-lg hover:bg-zinc-800">
+                        <i class="fa-solid fa-xmark text-lg"></i>
                     </button>
                 </div>
+                <div id="listaHistoricoComp" class="p-4 space-y-2 max-h-[70vh] overflow-y-auto hide-scrollbar"></div>
             </div>
         </div>
 

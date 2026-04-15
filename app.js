@@ -5,6 +5,7 @@ var carreiraAtualId = null;
 var agendaAtual = [];
 var elencoFixo = [];
 var competicoesAtivas = [];
+var competicaoModalAtual = null;
 
 window.verificarSessao = function() {
     const savedId = localStorage.getItem('smc_carreira_id');
@@ -844,7 +845,7 @@ function renderizarCompeticoesHome(comps) {
     el.innerHTML = comps.map(c => {
         const b = badge[c.tipo] || badge.liga;
         return `
-        <div onclick="abrirModalCompeticao('${c.nome}', '${c.fase || '--'}', '${c.status || 'Em Andamento'}')"
+        <div onclick="abrirModalCompeticao('${c.id}', '${c.nome}', '${c.fase || ''}', '${c.status || 'Em Andamento'}')"
              class="min-w-[155px] snap-center bg-zinc-900 border border-zinc-800 rounded-xl p-3 shadow text-left flex-shrink-0 cursor-pointer hover:border-zinc-500 transition space-y-1.5">
             <span class="inline-block text-[8px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded border ${b.cls}">${b.label}</span>
             <p class="text-[11px] text-zinc-200 font-bold leading-tight truncate">${c.nome}</p>
@@ -925,11 +926,81 @@ window.deletarCompeticao = async function(id) {
     await window.abrirModalCompeticoes();
 }
 
-window.abrirModalCompeticao = function(nome, fase, status) {
+window.abrirModalCompeticao = function(id, nome, fase, status) {
+    competicaoModalAtual = id;
     document.getElementById('modalCompNome').innerText = nome;
-    document.getElementById('modalCompFase').innerText = fase;
-    document.getElementById('modalCompStatus').innerText = status;
+    document.getElementById('modalCompFase').value = fase || '';
+    document.getElementById('modalCompStatus').value = status || 'Em Andamento';
     abrirModal('modal-competicao');
+}
+
+window.salvarEdicaoCompeticao = async function() {
+    if (!competicaoModalAtual) return;
+    const fase   = document.getElementById('modalCompFase').value.trim();
+    const status = document.getElementById('modalCompStatus').value;
+    const btn = document.getElementById('btnSalvarComp');
+    btn.innerText = 'Salvando...';
+    try {
+        const { error } = await window.meuSupabase
+            .from('competicoes')
+            .update({ fase, status })
+            .eq('id', competicaoModalAtual);
+        if (error) throw error;
+        fecharModal('modal-competicao');
+        await carregarCompeticoes();
+    } catch(e) { alert('Erro ao salvar: ' + e.message); }
+    finally { btn.innerText = 'Salvar'; }
+}
+
+window.abrirHistoricoCompeticao = async function() {
+    const compNome = document.getElementById('modalCompNome').innerText;
+    document.getElementById('modalHistCompNome').innerText = compNome;
+    document.getElementById('modalHistCompStats').innerText = 'Carregando...';
+    document.getElementById('listaHistoricoComp').innerHTML =
+        '<div class="text-center p-6 text-zinc-600 text-xs"><i class="fa-solid fa-spinner fa-spin mr-1"></i> Buscando partidas...</div>';
+    abrirModal('modal-historico-comp');
+
+    try {
+        const { data, error } = await window.meuSupabase
+            .from('partidas')
+            .select('adversario, gols_pro, gols_contra')
+            .eq('carreira_id', carreiraAtualId)
+            .eq('competicao_id', competicaoModalAtual)
+            .order('id', { ascending: false });
+        if (error) throw error;
+
+        if (!data || data.length === 0) {
+            document.getElementById('listaHistoricoComp').innerHTML =
+                '<p class="text-xs text-zinc-600 text-center py-8">Nenhuma partida registrada nesta competição.</p>';
+            document.getElementById('modalHistCompStats').innerText = '0 jogos';
+            return;
+        }
+
+        let v = 0, e = 0, d = 0;
+        const html = data.map(p => {
+            const pro = p.gols_pro, contra = p.gols_contra;
+            let res, cls;
+            if (pro > contra)       { res = 'V'; cls = 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'; v++; }
+            else if (pro === contra) { res = 'E'; cls = 'bg-zinc-500/20 text-zinc-400 border-zinc-500/30'; e++; }
+            else                    { res = 'D'; cls = 'bg-rose-500/20 text-rose-400 border-rose-500/30'; d++; }
+            return `
+            <div class="flex items-center justify-between bg-zinc-950 border border-zinc-800 p-3 rounded-xl">
+                <div class="flex items-center gap-2.5">
+                    <span class="text-[9px] font-bold px-1.5 py-0.5 rounded border ${cls}">${res}</span>
+                    <span class="text-sm font-semibold text-zinc-200">${p.adversario}</span>
+                </div>
+                <span class="text-sm font-bold text-zinc-100 bg-zinc-800 px-2.5 py-1 rounded-lg border border-zinc-700">${pro} × ${contra}</span>
+            </div>`;
+        }).join('');
+
+        document.getElementById('listaHistoricoComp').innerHTML = html;
+        document.getElementById('modalHistCompStats').innerText =
+            `${data.length} jogo${data.length > 1 ? 's' : ''} · ${v}V ${e}E ${d}D`;
+
+    } catch(e) {
+        document.getElementById('listaHistoricoComp').innerHTML =
+            `<p class="text-xs text-rose-500/70 text-center py-4">${e.message}</p>`;
+    }
 }
 
 window.abrirFormTrofeu = async function() {
