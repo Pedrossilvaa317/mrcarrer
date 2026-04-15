@@ -845,7 +845,7 @@ function renderizarCompeticoesHome(comps) {
     el.innerHTML = comps.map(c => {
         const b = badge[c.tipo] || badge.liga;
         return `
-        <div onclick="abrirModalCompeticao('${c.id}', '${c.nome}', '${c.fase || ''}', '${c.status || 'Em Andamento'}')"
+        <div onclick="abrirDetalheCompeticao('${c.id}', '${c.nome}', '${c.fase || ''}', '${c.tipo || 'liga'}')"
              class="min-w-[155px] snap-center bg-zinc-900 border border-zinc-800 rounded-xl p-3 shadow text-left flex-shrink-0 cursor-pointer hover:border-zinc-500 transition space-y-1.5">
             <span class="inline-block text-[8px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded border ${b.cls}">${b.label}</span>
             <p class="text-[11px] text-zinc-200 font-bold leading-tight truncate">${c.nome}</p>
@@ -932,6 +932,86 @@ window.abrirModalCompeticao = function(id, nome, fase, status) {
     document.getElementById('modalCompFase').value = fase || '';
     document.getElementById('modalCompStatus').value = status || 'Em Andamento';
     abrirModal('modal-competicao');
+}
+
+window.abrirDetalheCompeticao = async function(id, nome, fase, tipo) {
+    // Preenche cabeçalho com loading
+    document.getElementById('detalheCompNome').innerText = nome;
+    document.getElementById('detalheCompFase').innerText = fase || '--';
+    document.getElementById('detalheJogos').innerText        = '—';
+    document.getElementById('detalheVitorias').innerText     = '—';
+    document.getElementById('detalheEmpates').innerText      = '—';
+    document.getElementById('detalheDerrotas').innerText     = '—';
+    document.getElementById('detalheAproveitamento').innerText = '—';
+    document.getElementById('detalheBarraAprov').style.width   = '0%';
+    document.getElementById('detalheArtilheiroNome').innerText = '—';
+    document.getElementById('detalheArtilheiroQtd').innerText  = '';
+    document.getElementById('detalheGarcomNome').innerText     = '—';
+    document.getElementById('detalheGarcomQtd').innerText      = '';
+    abrirModal('modal-detalhe-competicao');
+
+    try {
+        const { data, error } = await window.meuSupabase
+            .from('partidas')
+            .select('gols_pro, gols_contra, fato_do_jogo')
+            .eq('carreira_id', carreiraAtualId)
+            .eq('competicao_id', id);
+        if (error) throw error;
+
+        const partidas = data || [];
+        const J = partidas.length;
+        let V = 0, E = 0, D = 0;
+        const golsMap   = {};
+        const assistMap = {};
+
+        partidas.forEach(p => {
+            const pro    = Number(p.gols_pro)    || 0;
+            const contra = Number(p.gols_contra) || 0;
+            if      (pro > contra) V++;
+            else if (pro === contra) E++;
+            else D++;
+
+            // Parseia fato_do_jogo
+            let fato = p.fato_do_jogo;
+            if (typeof fato === 'string') {
+                try { fato = JSON.parse(fato); } catch(_) { fato = null; }
+            }
+            if (fato) {
+                (fato.gols   || []).forEach(n => { golsMap[n]   = (golsMap[n]   || 0) + 1; });
+                (fato.assists|| []).forEach(n => { assistMap[n] = (assistMap[n] || 0) + 1; });
+            }
+        });
+
+        const aprov = J > 0 ? Math.round(((V * 3 + E) / (J * 3)) * 100) : 0;
+
+        // Artilheiro
+        const artilheiro = Object.entries(golsMap).sort((a, b) => b[1] - a[1])[0];
+        // Garçom
+        const garcom     = Object.entries(assistMap).sort((a, b) => b[1] - a[1])[0];
+
+        // Injeta dados
+        document.getElementById('detalheJogos').innerText    = J;
+        document.getElementById('detalheVitorias').innerText = V;
+        document.getElementById('detalheEmpates').innerText  = E;
+        document.getElementById('detalheDerrotas').innerText = D;
+        document.getElementById('detalheAproveitamento').innerText = aprov + '%';
+        document.getElementById('detalheBarraAprov').style.width   = aprov + '%';
+
+        if (artilheiro) {
+            document.getElementById('detalheArtilheiroNome').innerText = artilheiro[0];
+            document.getElementById('detalheArtilheiroQtd').innerText  = artilheiro[1] + ' gol' + (artilheiro[1] > 1 ? 's' : '');
+        } else {
+            document.getElementById('detalheArtilheiroNome').innerText = 'Nenhum registrado';
+        }
+        if (garcom) {
+            document.getElementById('detalheGarcomNome').innerText = garcom[0];
+            document.getElementById('detalheGarcomQtd').innerText  = garcom[1] + ' assist' + (garcom[1] > 1 ? 's' : '');
+        } else {
+            document.getElementById('detalheGarcomNome').innerText = 'Nenhum registrado';
+        }
+    } catch(e) {
+        console.error('abrirDetalheCompeticao:', e);
+    }
 }
 
 window.salvarEdicaoCompeticao = async function() {
