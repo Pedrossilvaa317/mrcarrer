@@ -822,11 +822,10 @@ window.carregarCompeticoes = async function() {
             .eq('carreira_id', carreiraAtualId)
             .order('criado_em', { ascending: true });
 
-        if (!error && data) {
-            competicoesAtivas = data;
-            renderizarCompeticoesHome(data);
-            popularSelectCompeticoes();
-        }
+        if (error) { console.error('carregarCompeticoes erro:', error.message); return; }
+        competicoesAtivas = data || [];
+        renderizarCompeticoesHome(competicoesAtivas);
+        popularSelectCompeticoes();
     } catch(e) { console.error('carregarCompeticoes:', e); }
 }
 
@@ -891,7 +890,7 @@ window.abrirModalCompeticoes = async function() {
                 </button>
             </div>`).join('');
     } catch(e) {
-        lista.innerHTML = '<p class="text-xs text-zinc-600 text-center py-4">Erro ao carregar.</p>';
+        lista.innerHTML = `<p class="text-xs text-rose-500/70 text-center py-4 px-2 font-mono">${e.message || e}</p>`;
     }
 }
 
