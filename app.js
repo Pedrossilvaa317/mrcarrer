@@ -741,6 +741,11 @@ window.criarCarreira = async function() {
 window.abrirModal = function(id) { document.getElementById(id).classList.remove('hidden'); }
 window.fecharModal = function(id) { document.getElementById(id).classList.add('hidden'); }
 
+window.abrirModalNovoJogo = function() {
+    popularSelectCompeticoes();
+    abrirModal('modal-jogo');
+}
+
 window.salvarNovoJogo = async function() {
     const adv = document.getElementById('novoJogoAdv').value;
     const compSel = document.getElementById('novoJogoCompId');
