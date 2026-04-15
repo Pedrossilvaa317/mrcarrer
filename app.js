@@ -741,8 +741,8 @@ window.criarCarreira = async function() {
 window.abrirModal = function(id) { document.getElementById(id).classList.remove('hidden'); }
 window.fecharModal = function(id) { document.getElementById(id).classList.add('hidden'); }
 
-window.abrirModalNovoJogo = function() {
-    popularSelectCompeticoes();
+window.abrirModalNovoJogo = async function() {
+    await carregarCompeticoes();
     abrirModal('modal-jogo');
 }
 
@@ -933,8 +933,8 @@ window.abrirModalCompeticao = function(nome, fase, status) {
     abrirModal('modal-competicao');
 }
 
-window.abrirFormTrofeu = function() {
-    popularSelectCompeticoes();
+window.abrirFormTrofeu = async function() {
+    await carregarCompeticoes();
     document.getElementById('trofeuAno').value = new Date().getFullYear();
     abrirModal('modal-add-trofeu');
 }
