@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mrcarrer-v3';
+const CACHE_NAME = 'mrcarrer-v4';
 const urlsToCache = [
   '/',
   '/index.html',
