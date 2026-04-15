@@ -4,6 +4,7 @@ window.meuSupabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 var carreiraAtualId = null;
 var agendaAtual = [];
 var elencoFixo = [];
+var competicoesAtivas = [];
 
 window.verificarSessao = function() {
     const savedId = localStorage.getItem('smc_carreira_id');
@@ -32,8 +33,9 @@ async function iniciarApp() {
             window.mudarTela('home', 'Home', 'fa-home');
             atualizarDashboard();
             await window.carregarElenco();
+            await carregarCompeticoes();
             window.popularSeletorSúmula();
-            carregarAgenda(); 
+            carregarAgenda();
             carregarRankings(); // CARREGA O RANKING AO ABRIR O APP
         } else {
             fazerLogout();
@@ -116,24 +118,9 @@ window.atualizarHomeDashboard = function(carreira) {
     document.getElementById('homeNacionalidadeTreinador').innerText = "Brasileiro";
     document.getElementById('homeReputacaoTreinador').innerHTML = `Intocável <i class="fa-solid fa-star text-[10px]"></i>`;
     
-    // Carrossel Mock
-    let carrosselHtml = '';
-    const comps = [
-        { nome: 'Camp. Brasileiro', fase: '13ª Rodada', status: 'Em Andamento' },
-        { nome: 'Copa do Brasil', fase: 'Oitavas', status: 'Classificado' },
-        { nome: 'Libertadores', fase: 'Fase de Grupos', status: 'Líder' }
-    ];
-    comps.forEach(c => {
-        carrosselHtml += `
-        <div onclick="abrirModalCompeticao('${c.nome}', '${c.fase}', '${c.status}')" class="min-w-[140px] snap-center bg-zinc-900 border border-zinc-800 rounded-xl p-3 shadow text-left flex-shrink-0 cursor-pointer hover:border-zinc-500 transition">
-            <p class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-1 truncate">${c.nome}</p>
-            <p class="text-sm font-bold text-zinc-200">${c.fase}</p>
-            <p class="text-[9px] text-emerald-500 font-bold uppercase tracking-widest mt-1">${c.status}</p>
-        </div>`;
-    });
-    
-    let elCarrossel = document.getElementById('homeCompeticoesCarrossel');
-    if(elCarrossel) elCarrossel.innerHTML = carrosselHtml;
+    // Carrossel será preenchido por carregarCompeticoes()
+    const elCarrossel = document.getElementById('homeCompeticoesCarrossel');
+    if(elCarrossel) elCarrossel.innerHTML = '<div class="min-w-[160px] snap-center bg-zinc-900/40 border border-dashed border-zinc-800 rounded-xl p-3 text-center flex-shrink-0 flex items-center justify-center"><p class="text-[10px] text-zinc-700 font-bold uppercase tracking-widest">Carregando...</p></div>';
 }
 
 window.carregarElenco = async function() {
@@ -702,7 +689,11 @@ window.salvarPartida = async function() {
             console.error(err);
         }
         
-        const { error: partidaErr } = await window.meuSupabase.from('partidas').insert([{ carreira_id: carreiraAtualId, adversario: adv, gols_pro: parseInt(pro), gols_contra: parseInt(contra), fato_do_jogo: fatoJson }]);
+        const partidaPayload = { carreira_id: carreiraAtualId, adversario: adv, gols_pro: parseInt(pro), gols_contra: parseInt(contra), fato_do_jogo: fatoJson };
+        if (agendaAtual.length > 0 && agendaAtual[0].competicao_id) {
+            partidaPayload.competicao_id = agendaAtual[0].competicao_id;
+        }
+        const { error: partidaErr } = await window.meuSupabase.from('partidas').insert([partidaPayload]);
         if (partidaErr) throw new Error("Supabase: " + partidaErr.message);
         
         if (agendaAtual.length > 0 && agendaAtual[0].adversario === adv) {
@@ -752,25 +743,30 @@ window.fecharModal = function(id) { document.getElementById(id).classList.add('h
 
 window.salvarNovoJogo = async function() {
     const adv = document.getElementById('novoJogoAdv').value;
-    const comp = document.getElementById('novoJogoComp').value || "Amistoso";
+    const compSel = document.getElementById('novoJogoCompId');
+    const compId = compSel ? compSel.value || null : null;
+    const compNome = (compSel && compSel.value)
+        ? compSel.options[compSel.selectedIndex].text.split(' — ')[0]
+        : 'Amistoso';
     const loc = document.getElementById('novoJogoLocal').value;
     const dateE = document.getElementById('novoJogoData').value;
-    
+
     if(!adv) return alert("Digite o nome do adversário.");
-    
+
     document.getElementById('btnSaveJogo').innerText = "Agendando...";
     try {
         let payload = {
             carreira_id: carreiraAtualId,
             adversario: adv,
-            competicao: comp,
+            competicao: compNome,
             local: loc
         };
+        if(compId) payload.competicao_id = compId;
         if(dateE) payload.data_jogo = dateE;
-        
+
         const { error } = await window.meuSupabase.from('agenda').insert([payload]);
         if(error) throw new Error("DB Error: " + error.message);
-        
+
         document.getElementById('novoJogoAdv').value = '';
         fecharModal('modal-jogo');
         carregarAgenda();
@@ -811,11 +807,153 @@ window.salvarNovoJogador = async function() {
     finally { document.getElementById('btnSaveJogador').innerText = "Contratar"; }
 }
 
+// ── COMPETIÇÕES ──────────────────────────────────────────────
+
+window.carregarCompeticoes = async function() {
+    try {
+        const { data, error } = await window.meuSupabase
+            .from('competicoes')
+            .select('*')
+            .eq('carreira_id', carreiraAtualId)
+            .order('criado_em', { ascending: true });
+
+        if (!error && data) {
+            competicoesAtivas = data;
+            renderizarCarrosselCompeticoes(data);
+            popularSelectCompeticoes();
+        }
+    } catch(e) { console.error('carregarCompeticoes:', e); }
+}
+
+function renderizarCarrosselCompeticoes(comps) {
+    const el = document.getElementById('homeCompeticoesCarrossel');
+    if (!el) return;
+    if (!comps || comps.length === 0) {
+        el.innerHTML = `<div class="min-w-[200px] snap-center bg-zinc-900/40 border border-dashed border-zinc-800 rounded-xl p-4 text-center flex-shrink-0 flex flex-col items-center justify-center gap-1.5">
+            <i class="fa-solid fa-gear text-zinc-700 text-lg"></i>
+            <p class="text-[10px] text-zinc-600 font-bold uppercase tracking-widest">Cadastre competições<br>usando o botão Gerenciar</p>
+        </div>`;
+        return;
+    }
+    let html = '';
+    comps.forEach(c => {
+        html += `
+        <div onclick="abrirModalCompeticao('${c.nome}', '${c.fase || '--'}', '${c.status || 'Em Andamento'}')" class="min-w-[140px] snap-center bg-zinc-900 border border-zinc-800 rounded-xl p-3 shadow text-left flex-shrink-0 cursor-pointer hover:border-zinc-500 transition">
+            <p class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-1 truncate">${c.nome}</p>
+            <p class="text-sm font-bold text-zinc-200">${c.fase || '--'}</p>
+            <p class="text-[9px] text-emerald-500 font-bold uppercase tracking-widest mt-1">${c.status || 'Em Andamento'}</p>
+        </div>`;
+    });
+    el.innerHTML = html;
+}
+
+function popularSelectCompeticoes() {
+    ['novoJogoCompId', 'trofeuCompId'].forEach(id => {
+        const sel = document.getElementById(id);
+        if (!sel) return;
+        sel.innerHTML = '<option value="">Selecione uma competição...</option>';
+        competicoesAtivas.forEach(c => {
+            sel.innerHTML += `<option value="${c.id}">${c.nome}${c.fase ? ' — ' + c.fase : ''}</option>`;
+        });
+    });
+}
+
+window.abrirModalCompeticoes = async function() {
+    abrirModal('modal-competicoes');
+    const lista = document.getElementById('listaCompeticoes');
+    lista.innerHTML = '<div class="text-center p-4 text-zinc-600 text-xs">Carregando...</div>';
+    try {
+        const { data, error } = await window.meuSupabase
+            .from('competicoes').select('*')
+            .eq('carreira_id', carreiraAtualId)
+            .order('criado_em', { ascending: true });
+        if (error) throw error;
+        if (!data || data.length === 0) {
+            lista.innerHTML = '<p class="text-xs text-zinc-600 text-center py-4 px-2">Nenhuma competição cadastrada ainda.</p>';
+            return;
+        }
+        lista.innerHTML = data.map(c => `
+            <div class="flex justify-between items-center bg-zinc-950 border border-zinc-800 p-3 rounded-xl group">
+                <div>
+                    <p class="text-sm font-bold text-zinc-200">${c.nome}</p>
+                    <p class="text-[10px] text-zinc-500 font-semibold tracking-widest uppercase mt-0.5">${c.fase || '--'} · <span class="text-emerald-600">${c.status || 'Em Andamento'}</span></p>
+                </div>
+                <button onclick="deletarCompeticao('${c.id}')" class="text-zinc-700 hover:text-rose-500 transition p-1.5 opacity-0 group-hover:opacity-100 rounded-lg hover:bg-zinc-900">
+                    <i class="fa-solid fa-trash text-xs"></i>
+                </button>
+            </div>`).join('');
+    } catch(e) {
+        lista.innerHTML = '<p class="text-xs text-zinc-600 text-center py-4">Erro ao carregar.</p>';
+    }
+}
+
+window.salvarNovaCompeticao = async function() {
+    const nome = document.getElementById('novaCompNome').value.trim();
+    const fase = document.getElementById('novaCompFase').value.trim();
+    if (!nome) return alert('Digite o nome da competição.');
+    const btn = document.getElementById('btnSaveComp');
+    btn.innerText = 'Salvando...';
+    try {
+        const { error } = await window.meuSupabase.from('competicoes').insert([{
+            carreira_id: carreiraAtualId,
+            nome: nome,
+            fase: fase || '1ª Fase',
+            status: 'Em Andamento'
+        }]);
+        if (error) throw error;
+        document.getElementById('novaCompNome').value = '';
+        document.getElementById('novaCompFase').value = '';
+        await carregarCompeticoes();
+        await window.abrirModalCompeticoes();
+    } catch(e) { alert('Erro ao cadastrar: ' + e.message); }
+    finally { btn.innerText = 'Cadastrar'; }
+}
+
+window.deletarCompeticao = async function(id) {
+    if (!confirm('Remover esta competição?')) return;
+    await window.meuSupabase.from('competicoes').delete().eq('id', id);
+    await carregarCompeticoes();
+    await window.abrirModalCompeticoes();
+}
+
 window.abrirModalCompeticao = function(nome, fase, status) {
     document.getElementById('modalCompNome').innerText = nome;
     document.getElementById('modalCompFase').innerText = fase;
     document.getElementById('modalCompStatus').innerText = status;
     abrirModal('modal-competicao');
+}
+
+window.abrirFormTrofeu = function() {
+    popularSelectCompeticoes();
+    document.getElementById('trofeuAno').value = new Date().getFullYear();
+    abrirModal('modal-add-trofeu');
+}
+
+window.salvarTrofeu = async function() {
+    const compSel = document.getElementById('trofeuCompId');
+    const compId = compSel ? compSel.value : '';
+    const compNome = (compSel && compSel.value)
+        ? compSel.options[compSel.selectedIndex].text.split(' — ')[0]
+        : '';
+    const ano = document.getElementById('trofeuAno').value;
+
+    if (!compId) return alert('Selecione uma competição.');
+    if (!ano) return alert('Informe o ano da conquista.');
+
+    const btn = document.getElementById('btnSaveTrofeu');
+    btn.innerText = 'Salvando...';
+    try {
+        const { error } = await window.meuSupabase.from('trofeus').insert([{
+            carreira_id: carreiraAtualId,
+            nome: compNome,
+            ano: parseInt(ano),
+            competicao_id: compId
+        }]);
+        if (error) throw error;
+        fecharModal('modal-add-trofeu');
+        await window.abrirSalaTrofeus();
+    } catch(e) { alert('Erro ao salvar troféu: ' + e.message); }
+    finally { btn.innerText = 'Salvar Troféu'; }
 }
 
 window.abrirSalaTrofeus = async function() {

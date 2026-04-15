@@ -111,7 +111,10 @@
             <div>
                 <div class="flex justify-between items-center mb-2.5 px-1">
                     <h3 class="text-[11px] font-semibold text-zinc-500 tracking-wider flex items-center gap-2 uppercase"><i class="fa-solid fa-trophy text-zinc-400"></i> Competições Ativas</h3>
-                    <button onclick="abrirSalaTrofeus()" class="bg-amber-500/10 text-amber-500 border border-amber-500/30 px-4 py-2 rounded-lg font-bold text-xs uppercase tracking-widest hover:bg-amber-500/20 transition"><i class="fa-solid fa-trophy"></i> Sala de Troféus</button>
+                    <div class="flex gap-2">
+                        <button onclick="abrirModalCompeticoes()" class="text-zinc-400 border border-zinc-700 px-3 py-2 rounded-lg font-bold text-xs uppercase tracking-widest hover:bg-zinc-800 hover:text-zinc-200 transition"><i class="fa-solid fa-gear mr-1 text-[10px]"></i> Gerenciar</button>
+                        <button onclick="abrirSalaTrofeus()" class="bg-amber-500/10 text-amber-500 border border-amber-500/30 px-3 py-2 rounded-lg font-bold text-xs uppercase tracking-widest hover:bg-amber-500/20 transition"><i class="fa-solid fa-trophy"></i></button>
+                    </div>
                 </div>
                 <div id="homeCompeticoesCarrossel" class="flex overflow-x-auto gap-3 pb-2 snap-x snap-mandatory hide-scrollbar">
                     <!-- Preenchido via JS -->
@@ -302,8 +305,10 @@
                         <input type="text" id="novoJogoAdv" placeholder="Nome do Clube" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-zinc-100 outline-none focus:border-zinc-600 text-sm">
                     </div>
                     <div>
-                        <label class="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1.5">Competição / Tipo</label>
-                        <input type="text" id="novoJogoComp" placeholder="Amistoso, Liga..." class="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-zinc-100 outline-none focus:border-zinc-600 text-sm">
+                        <label class="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1.5">Competição</label>
+                        <select id="novoJogoCompId" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-zinc-100 outline-none focus:border-zinc-600 text-sm">
+                            <option value="">Selecione uma competição...</option>
+                        </select>
                     </div>
                     <div class="flex gap-3">
                         <div class="flex-1">
@@ -364,6 +369,68 @@
             </div>
         </div>
 
+        <!-- Modal: Gerenciar Competições -->
+        <div id="modal-competicoes" class="fixed inset-0 z-[60] bg-zinc-950/90 backdrop-blur-sm flex justify-center items-start p-4 hidden overflow-y-auto">
+            <div class="bg-zinc-900 border border-zinc-800 w-full max-w-sm rounded-2xl shadow-2xl relative mt-4 mb-4">
+                <div class="bg-zinc-800/80 px-5 py-4 border-b border-zinc-700/50 flex justify-between items-center rounded-t-2xl">
+                    <div>
+                        <h2 class="text-base font-bold text-zinc-100 uppercase tracking-widest flex items-center gap-2.5"><i class="fa-solid fa-gear text-zinc-400"></i> Competições</h2>
+                        <p class="text-[10px] text-zinc-500 uppercase tracking-widest mt-0.5 font-semibold">Gerencie as ligas e torneios</p>
+                    </div>
+                    <button onclick="fecharModal('modal-competicoes')" class="text-zinc-500 hover:text-zinc-300 transition p-1.5 rounded-lg hover:bg-zinc-800">
+                        <i class="fa-solid fa-xmark text-lg"></i>
+                    </button>
+                </div>
+                <!-- Lista -->
+                <div id="listaCompeticoes" class="p-4 space-y-2 max-h-56 overflow-y-auto hide-scrollbar">
+                    <div class="text-center p-4 text-zinc-600 text-xs">Carregando...</div>
+                </div>
+                <!-- Form nova competição -->
+                <div class="border-t border-zinc-800 p-4 space-y-3">
+                    <p class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Nova Competição</p>
+                    <div class="flex gap-2">
+                        <input type="text" id="novaCompNome" placeholder="Ex: Brasileirão Série A" class="flex-1 bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-zinc-100 outline-none focus:border-zinc-600 text-sm">
+                        <input type="text" id="novaCompFase" placeholder="1ª Rodada" class="w-28 bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-zinc-100 outline-none focus:border-zinc-600 text-sm">
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="fecharModal('modal-competicoes')" class="flex-1 py-3 text-xs font-bold uppercase tracking-widest rounded-xl text-zinc-500 hover:text-zinc-300 transition">Fechar</button>
+                        <button onclick="salvarNovaCompeticao()" id="btnSaveComp" class="flex-1 py-3 text-xs font-bold uppercase tracking-widest rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg transition">Cadastrar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal: Registrar Conquista (Troféu) -->
+        <div id="modal-add-trofeu" class="fixed inset-0 z-[70] bg-zinc-950/90 backdrop-blur-sm flex justify-center items-center p-4 hidden">
+            <div class="bg-zinc-900 border border-amber-500/20 w-full max-w-sm rounded-2xl shadow-2xl p-5">
+                <div class="flex justify-between items-center mb-5">
+                    <div>
+                        <h2 class="text-base font-bold text-amber-400 uppercase tracking-widest flex items-center gap-2"><i class="fa-solid fa-trophy"></i> Registrar Conquista</h2>
+                        <p class="text-[10px] text-amber-500/50 uppercase tracking-widest mt-0.5 font-semibold">Eternize na prateleira</p>
+                    </div>
+                    <button onclick="fecharModal('modal-add-trofeu')" class="text-zinc-500 hover:text-zinc-300 transition p-1.5 rounded-lg hover:bg-zinc-800">
+                        <i class="fa-solid fa-xmark text-lg"></i>
+                    </button>
+                </div>
+                <div class="space-y-3 mb-5">
+                    <div>
+                        <label class="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1.5">Competição Conquistada</label>
+                        <select id="trofeuCompId" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-zinc-100 outline-none focus:border-zinc-600 text-sm">
+                            <option value="">Selecione uma competição...</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1.5">Ano da Conquista</label>
+                        <input type="number" id="trofeuAno" placeholder="2025" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-zinc-100 outline-none focus:border-zinc-600 text-sm text-center font-bold tracking-widest">
+                    </div>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="fecharModal('modal-add-trofeu')" class="flex-1 py-3 text-xs font-bold uppercase tracking-widest rounded-xl text-zinc-500 hover:text-zinc-300 transition">Cancelar</button>
+                    <button onclick="salvarTrofeu()" id="btnSaveTrofeu" class="flex-1 py-3 text-xs font-bold uppercase tracking-widest rounded-xl bg-amber-600 hover:bg-amber-500 text-white shadow-lg shadow-amber-900/20 transition">Salvar Troféu</button>
+                </div>
+            </div>
+        </div>
+
         <!-- Modal: Sala de Troféus -->
         <div id="modal-trofeus" class="fixed inset-0 z-[60] bg-zinc-950/95 backdrop-blur-sm flex justify-center items-start p-4 hidden overflow-y-auto">
             <div class="bg-zinc-900 border border-amber-500/20 w-full max-w-sm rounded-2xl shadow-2xl relative mt-4 mb-4">
@@ -379,7 +446,10 @@
                     </button>
                 </div>
                 <div class="p-4">
-                    <div id="gridTrofeus" class="grid grid-cols-2 gap-4"></div>
+                    <div id="gridTrofeus" class="grid grid-cols-2 gap-4 mb-4"></div>
+                    <button onclick="abrirFormTrofeu()" class="w-full py-3 text-xs font-bold uppercase tracking-widest rounded-xl border border-amber-500/20 text-amber-500/70 hover:text-amber-400 hover:bg-amber-500/10 transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-plus"></i> Adicionar Conquista
+                    </button>
                 </div>
             </div>
         </div>
