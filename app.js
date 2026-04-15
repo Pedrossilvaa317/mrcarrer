@@ -138,7 +138,11 @@ window.atualizarHomeDashboard = function(carreira) {
 
 window.carregarElenco = async function() {
     try {
-        const { data, error } = await window.meuSupabase.from('jogadores').select('*').order('nome', { ascending: true });
+        const { data, error } = await window.meuSupabase.from('jogadores')
+            .select('*')
+            .eq('carreira_id', carreiraAtualId)
+            .order('nome', { ascending: true });
+            
         if (!error && data) {
             elencoFixo = data;
             if(window.renderizarAvaliacaoRapida) window.renderizarAvaliacaoRapida();
@@ -313,7 +317,6 @@ window.carregarRankings = async function() {
                     </div>
                 </div>
                 
-                <!-- Energy Bar -->
                 <div>
                     <div class="flex justify-between text-[9px] font-bold uppercase tracking-widest text-zinc-500 mb-1">
                         <span>Energia Física</span>
@@ -473,7 +476,6 @@ window.salvarPartida = async function() {
     
     document.getElementById('btnSalvar').innerHTML = "Enviando... ⏳";
     try {
-        // Lógica Tinder do Vestiário (Avaliação Rápida)
         let resultPlacar = "Boa";
         let proNum = parseInt(pro) || 0;
         let conNum = parseInt(contra) || 0;
@@ -505,7 +507,6 @@ window.salvarPartida = async function() {
                     novaEnergia = Math.max(0, energiaBase - 25);
                     jogou = true;
                 } else {
-                    // Cuidado Físico pro Reserva (Recupera +15)
                     novaEnergia = Math.min(100, energiaBase + 15);
                 }
                 
@@ -519,11 +520,15 @@ window.salvarPartida = async function() {
         }
         
         if (updatesJogadores.length > 0) {
-            const { error: upsertErr } = await window.meuSupabase.from('jogadores').upsert(updatesJogadores);
-            if (upsertErr) {
-                alert("Falha Supersônica do Banco de Dados: " + upsertErr.message);
-                throw upsertErr;
-            }
+            const promessasUpdate = updatesJogadores.map(upd => {
+                return window.meuSupabase.from('jogadores').update({
+                    energia: upd.energia,
+                    moral: upd.moral,
+                    partidas_jogadas: upd.partidas_jogadas
+                }).eq('id', upd.id);
+            });
+            
+            await Promise.all(promessasUpdate);
             await window.carregarElenco(); // Refresh silently
         }
 
@@ -579,18 +584,46 @@ window.salvarPartida = async function() {
                 const respostasIA = await fetchIA.json();
                 
                 let feedSocial = document.getElementById('feed-social');
-                if (feedSocial && feedSocial.innerHTML.includes('telefone está quieto')) feedSocial.innerHTML = '';
-                if (respostasIA.jornalista && feedSocial) {
-                    feedSocial.innerHTML = `<div class="bg-zinc-950 p-4 rounded-xl border border-zinc-800 mb-3"><p class="font-bold text-[9px] text-zinc-500 mb-1.5 tracking-widest"><i class="fa-regular fa-newspaper"></i> MANCHETE</p><p class="text-xs text-zinc-300 leading-relaxed">${respostasIA.jornalista}</p></div>` + feedSocial.innerHTML;
-                }
-                
-                let feedAuxiliar = document.getElementById('feed-auxiliar');
-                if (feedAuxiliar && feedAuxiliar.innerHTML.includes('Aguardando final')) feedAuxiliar.innerHTML = '';
-                if (respostasIA.auxiliar && feedAuxiliar) {
-                    feedAuxiliar.innerHTML = `<div class="mb-4 pb-4 border-b border-zinc-800/50"><p class="font-mono text-[11px] leading-relaxed text-zinc-400">"${respostasIA.auxiliar}"</p><p class="text-[9px] text-zinc-600 font-bold mt-2 text-right">Vs ${adv}</p></div>` + feedAuxiliar.innerHTML;
+                if (feedSocial && respostasIA.posts && respostasIA.posts.length > 0) {
+                    // Limpa placeholder inicial
+                    if (feedSocial.querySelector('p.text-zinc-600')) feedSocial.innerHTML = '';
+
+                    // Ícones e cores por rede
+                    const redesConfig = {
+                        'X':         { icon: 'fa-brands fa-x-twitter', bg: 'bg-zinc-950',  badge: 'bg-zinc-800 text-zinc-300',   border: 'border-zinc-700' },
+                        'Instagram': { icon: 'fa-brands fa-instagram',  bg: 'bg-zinc-950',  badge: 'bg-pink-900/50 text-pink-300', border: 'border-pink-900/50' }
+                    };
+                    const tiposConfig = {
+                        'clube':    { label: 'OFICIAL',   color: 'text-blue-400' },
+                        'midia':    { label: 'MÍDIA',     color: 'text-amber-400' },
+                        'torcedor': { label: 'TORCEDOR',  color: 'text-rose-400' }
+                    };
+
+                    let novoHtml = '';
+                    respostasIA.posts.forEach(post => {
+                        const rede = redesConfig[post.rede] || redesConfig['X'];
+                        const tipo = tiposConfig[post.tipo] || tiposConfig['midia'];
+                        novoHtml += `
+                        <div class="${rede.bg} border ${rede.border} p-4 rounded-xl space-y-2 shadow-sm">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <i class="${rede.icon} text-sm text-zinc-400"></i>
+                                    <span class="text-[11px] font-bold text-zinc-200">${post.autor}</span>
+                                    <span class="text-[8px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded ${rede.badge}">${post.rede}</span>
+                                </div>
+                                <span class="text-[9px] font-bold uppercase tracking-widest ${tipo.color}">${tipo.label}</span>
+                            </div>
+                            <p class="text-xs text-zinc-300 leading-relaxed">${post.texto}</p>
+                            <div class="flex items-center gap-1 text-[10px] text-zinc-500 pt-1 border-t border-zinc-800/50">
+                                <i class="fa-solid fa-heart text-[9px]"></i>
+                                <span>${post.engajamento}</span>
+                            </div>
+                        </div>`;
+                    });
+                    feedSocial.innerHTML = novoHtml + feedSocial.innerHTML;
                 }
             } else {
-                console.error("Vercel falhou ao gerar AI Text.");
+                console.error("Vercel falhou ao gerar posts sociais.");
             }
         } catch(err) {
             console.error(err);
@@ -614,11 +647,10 @@ window.salvarPartida = async function() {
         document.getElementById('amarelos').value = ""; document.getElementById('vermelhos').value = "";
         document.getElementById('lesoes').value = ""; document.getElementById('fatoDoJogo').value = "";
         
-        // Reseta os cards do Tinder do Vestiario
         if (window.renderizarAvaliacaoRapida) window.renderizarAvaliacaoRapida();
         
         atualizarDashboard(); 
-        carregarRankings(); // RECALCULA O RANKING COM OS DADOS NOVOS!
+        carregarRankings(); 
         window.mudarTela('social', 'Feed de Notícias', 'fa-hashtag');
     } catch (e) { alert("Erro: " + e.message); } 
     finally { document.getElementById('btnSalvar').innerHTML = "Salvar e Coletiva 🎙️"; }
@@ -676,15 +708,17 @@ window.salvarNovoJogo = async function() {
 window.salvarNovoJogador = async function() {
     const nome = document.getElementById('novoJogNome').value;
     const pos = document.getElementById('novoJogPos').value;
-    const num = document.getElementById('novoJogNum').value;
+    const num = document.getElementById('novoJogNum').value || null;
     
     if(!nome) return alert("Digite o nome do jogador.");
     
     document.getElementById('btnSaveJogador').innerText = "Assinando...";
     try {
         const { error } = await window.meuSupabase.from('jogadores').insert([{
+            carreira_id: carreiraAtualId,
             nome: nome,
             posicao: pos,
+            numero_camisa: num,
             energia: 100,
             moral: 'Boa',
             partidas_jogadas: 0
@@ -692,13 +726,15 @@ window.salvarNovoJogador = async function() {
         if (error) throw new Error("DB Error: " + error.message);
         
         document.getElementById('novoJogNome').value = '';
+        if(document.getElementById('novoJogNum')) document.getElementById('novoJogNum').value = '';
         fecharModal('modal-jogador');
         
-        // Sincronizando visual components pós assinaturas
+        // Sincronizando todos os componentes visuais
         await window.carregarElenco();
         if(window.popularSeletorSúmula) window.popularSeletorSúmula();
+        if(window.carregarRankings) await window.carregarRankings();
         
-    } catch(e) { alert("Erro ao assinar com jogador"); }
+    } catch(e) { alert("Erro ao assinar com jogador: " + e.message); }
     finally { document.getElementById('btnSaveJogador').innerText = "Contratar"; }
 }
 
