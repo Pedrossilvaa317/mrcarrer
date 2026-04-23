@@ -17,6 +17,7 @@
             theme: {
                 extend: {
                     fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: { creme: '#f5f0e8' }
                 }
             }
         }
@@ -24,17 +25,22 @@
     <style>
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        /* PWA Animations */
-        .tab-content { animation: fadeIn 0.35s ease-in-out; }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        .tab-content { animation: fadeIn 0.28s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        /* Drawer */
+        #drawerNav { transform: translateY(100%); transition: transform 0.3s cubic-bezier(.4,0,.2,1); }
+        #drawerNav.drawer-aberto { transform: translateY(0); }
+        #drawerOverlay { transition: opacity 0.3s ease; opacity: 0; }
+        #drawerOverlay.drawer-aberto { opacity: 1; }
+        /* Moral bar segment */
+        .moral-seg { flex: 1; height: 8px; border-radius: 9999px; }
+        /* Light page text */
+        .tela-clara { background-color: #f5f0e8; color: #1c1917; }
     </style>
 </head>
 <body class="bg-zinc-950 text-zinc-100 font-sans min-h-screen pb-20 selection:bg-zinc-800">
 
-    <header class="bg-zinc-950/80 backdrop-blur-md border-b border-zinc-900 p-4 sticky top-0 z-50">
+    <header id="appHeader" class="bg-zinc-950/80 backdrop-blur-md border-b border-zinc-900 p-4 sticky top-0 z-50">
         <div class="max-w-md mx-auto flex justify-center items-center relative">
             <h1 id="tituloTela" class="text-sm font-semibold text-center tracking-widest text-zinc-300 uppercase flex items-center justify-center gap-2">
                 <i class="fa-solid fa-power-off text-base"></i> Iniciando Conexão
@@ -87,53 +93,78 @@
 
     <main class="max-w-md mx-auto px-4 mt-6">
 
-        <div id="tela-home" class="tab-content hidden space-y-4">
-            <!-- Container 1: Perfil do Treinador -->
-            <div class="bg-zinc-900 border border-zinc-800 rounded-2xl shadow-xl overflow-hidden relative">
-                <div class="h-16 bg-gradient-to-r from-zinc-800 to-zinc-900 border-b border-zinc-800"></div>
-                <div class="px-5 pb-5 relative">
-                    <div class="w-16 h-16 bg-zinc-950 rounded-2xl border-4 border-zinc-900 flex items-center justify-center text-2xl text-zinc-600 shadow-inner absolute -top-8 left-5">
-                        <i class="fa-solid fa-user-tie"></i>
+        <!-- ═══════════════════ TELA HOME ═══════════════════ -->
+        <div id="tela-home" class="tab-content hidden bg-black -mx-4 -mt-6 min-h-screen pb-28">
+
+            <!-- Cabeçalho: competição + clube + stats -->
+            <div class="px-5 pt-10">
+                <p id="homeCompLabel" class="text-[10px] font-bold text-zinc-600 uppercase tracking-[0.18em]">TEMPORADA 2025</p>
+                <div class="flex items-center gap-3 mt-2 mb-5">
+                    <div class="w-11 h-11 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center flex-shrink-0">
+                        <i class="fa-solid fa-shield text-zinc-500 text-base"></i>
                     </div>
-                    <div class="mt-10">
-                        <h2 id="homeNomeTreinador" class="text-xl font-bold uppercase tracking-tight text-zinc-100">Carregando...</h2>
-                        <p id="homeNomeClube" class="text-xs text-zinc-400 font-medium tracking-widest flex items-center gap-1.5"><i class="fa-solid fa-shield text-zinc-600"></i> Buscando...</p>
-                    </div>
-                    <div class="flex gap-4 mt-4 pt-3 border-t border-zinc-800/50">
-                        <div class="flex-1"><p class="text-[10px] text-zinc-500 font-bold tracking-widest uppercase mb-0.5">Idade</p><p id="homeIdadeTreinador" class="text-sm font-semibold text-zinc-200">--</p></div>
-                        <div class="flex-1 border-l border-zinc-800 pl-4"><p class="text-[10px] text-zinc-500 font-bold tracking-widest uppercase mb-0.5">Nacionalidade</p><p id="homeNacionalidadeTreinador" class="text-sm font-semibold text-zinc-200">--</p></div>
-                        <div class="flex-1 border-l border-zinc-800 pl-4"><p class="text-[10px] text-zinc-500 font-bold tracking-widest uppercase mb-0.5">Reputação</p><p id="homeReputacaoTreinador" class="text-sm font-semibold text-amber-500 flex items-center gap-1">-- <i class="fa-solid fa-star text-[10px]"></i></p></div>
-                    </div>
+                    <h1 id="homeNomeClube" class="text-[2.4rem] font-black italic text-white leading-none tracking-tight">Clube</h1>
+                </div>
+                <!-- Estatísticas -->
+                <div class="flex gap-7 pb-6 border-b border-zinc-900">
+                    <div><p id="homeStatPos" class="text-[1.6rem] font-black text-white leading-none">—</p><p class="text-[9px] text-zinc-600 font-bold uppercase tracking-widest mt-0.5">Posição</p></div>
+                    <div><p id="homeStatV"   class="text-[1.6rem] font-black text-white leading-none">0</p><p class="text-[9px] text-zinc-600 font-bold uppercase tracking-widest mt-0.5">Vitórias</p></div>
+                    <div><p id="homeStatE"   class="text-[1.6rem] font-black text-white leading-none">0</p><p class="text-[9px] text-zinc-600 font-bold uppercase tracking-widest mt-0.5">Empates</p></div>
+                    <div><p id="homeStatD"   class="text-[1.6rem] font-black text-rose-500 leading-none">0</p><p class="text-[9px] text-zinc-600 font-bold uppercase tracking-widest mt-0.5">Derrotas</p></div>
                 </div>
             </div>
 
-            <!-- Container 2: Competições (Carrossel Horizontal) -->
-            <div>
-                <div class="flex justify-between items-center mb-2.5 px-1">
-                    <h3 class="text-[11px] font-semibold text-zinc-500 tracking-wider flex items-center gap-2 uppercase"><i class="fa-solid fa-trophy text-zinc-400"></i> Competições Ativas</h3>
+            <!-- Próximo Jogo -->
+            <div class="px-5 py-6 border-b border-zinc-900">
+                <p class="text-[9px] text-zinc-500 font-bold uppercase tracking-[0.18em] mb-3">Próximo Jogo</p>
+                <div class="flex items-center gap-3 mb-1">
+                    <div class="w-8 h-8 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center flex-shrink-0">
+                        <i class="fa-solid fa-shield text-zinc-600 text-xs"></i>
+                    </div>
+                    <p id="homeProxAdversario" class="text-[1.7rem] font-black italic text-white leading-none">Sem jogo</p>
+                </div>
+                <p id="homeProxData" class="text-base font-bold text-white mt-2 mb-0.5">Sem data</p>
+                <p id="homeProxInfo" class="text-xs text-zinc-500 mb-4">Nenhuma partida agendada</p>
+                <button onclick="mudarTela('calendario')" class="border border-zinc-700 text-white text-xs font-bold uppercase tracking-widest px-4 py-2.5 rounded-lg flex items-center gap-2 hover:bg-zinc-900 transition w-fit">
+                    PRÉ-JOGO <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                </button>
+            </div>
+
+            <!-- Moral -->
+            <div class="px-5 py-6 border-b border-zinc-900">
+                <div class="flex items-center justify-between mb-2.5">
+                    <p class="text-[9px] text-zinc-500 font-bold uppercase tracking-[0.18em]">Moral</p>
+                    <p id="homeMoralNum" class="text-sm font-black text-amber-500">50</p>
+                </div>
+                <div id="homeMoralBar" class="flex gap-[3px]"><!-- JS --></div>
+            </div>
+
+            <!-- Competições Carrossel -->
+            <div class="px-5 py-6 border-b border-zinc-900">
+                <div class="flex justify-between items-center mb-3">
+                    <div class="flex items-center gap-2">
+                        <div class="w-[3px] h-4 bg-zinc-700 rounded-full"></div>
+                        <p class="text-xs font-black text-zinc-400 uppercase tracking-widest">Competições</p>
+                    </div>
                     <div class="flex gap-2">
-                        <button onclick="abrirModalCompeticoes()" class="text-zinc-400 border border-zinc-700 px-3 py-2 rounded-lg font-bold text-xs uppercase tracking-widest hover:bg-zinc-800 hover:text-zinc-200 transition"><i class="fa-solid fa-gear mr-1 text-[10px]"></i> Gerenciar</button>
-                        <button onclick="abrirSalaTrofeus()" class="bg-amber-500/10 text-amber-500 border border-amber-500/30 px-3 py-2 rounded-lg font-bold text-xs uppercase tracking-widest hover:bg-amber-500/20 transition"><i class="fa-solid fa-trophy"></i></button>
+                        <button onclick="abrirModalCompeticoes()" class="text-zinc-500 text-[10px] font-bold uppercase tracking-widest border border-zinc-800 px-2.5 py-1.5 rounded-lg hover:bg-zinc-900 transition">Gerenciar</button>
+                        <button onclick="abrirSalaTrofeus()" class="text-amber-600 text-[10px] font-bold border border-amber-600/30 bg-amber-500/10 px-2.5 py-1.5 rounded-lg hover:bg-amber-500/20 transition"><i class="fa-solid fa-trophy"></i></button>
                     </div>
                 </div>
-                <div id="homeCompeticoesCarrossel" class="flex overflow-x-auto gap-3 pb-2 snap-x snap-mandatory hide-scrollbar">
-                    <!-- Preenchido via JS -->
-                </div>
+                <div id="homeCompeticoesCarrossel" class="flex overflow-x-auto gap-3 pb-1 snap-x snap-mandatory hide-scrollbar"></div>
             </div>
 
-            <!-- Container 3: Próximo Desafio -->
-            <div class="bg-zinc-900 border border-zinc-800 rounded-2xl shadow-xl overflow-hidden mt-4">
-                <div class="bg-zinc-800/80 px-4 py-2 border-b border-zinc-700/50 flex justify-between items-center">
-                    <span class="text-[10px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-1.5"><i class="fa-solid fa-bullhorn"></i> Próximo Desafio</span>
-                    <span id="homeProximoData" class="text-[9px] text-zinc-500 font-semibold border border-zinc-700 bg-zinc-950 px-2 py-0.5 rounded">Em breve</span>
+            <!-- NO RADAR -->
+            <div class="px-5 pt-6 pb-4">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-2">
+                        <div class="w-[3px] h-5 bg-amber-500 rounded-full"></div>
+                        <p class="text-sm font-black text-white uppercase tracking-wide">No Radar</p>
+                    </div>
+                    <button onclick="mudarTela('situacoes')" class="text-[10px] font-bold uppercase tracking-widest text-amber-500 hover:text-amber-400 transition">VER SITUAÇÕES →</button>
                 </div>
-                <div class="p-5 text-center">
-                    <p class="text-[10px] text-zinc-500 font-semibold tracking-widest mb-1" id="homeProximoCompeticao">--</p>
-                    <h3 id="homeProximoAdversario" class="text-2xl font-bold text-zinc-100 uppercase tracking-tight mb-5">Aguardando Sorteio</h3>
-                    
-                    <button onclick="mudarTela('sumula', 'Nova Súmula', 'fa-clipboard')" id="btnJogarProximo" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-xl uppercase tracking-widest shadow-lg shadow-blue-900/20 transition flex justify-center items-center gap-2 text-sm">
-                        <i class="fa-solid fa-play"></i> Jogar Próxima Partida
-                    </button>
+                <div id="homeNoRadar" class="space-y-3">
+                    <p class="text-xs text-zinc-700 py-4 text-center">Registre uma partida para gerar situações.</p>
                 </div>
             </div>
         </div>
@@ -239,28 +270,35 @@
             <div id="listaAgenda" class="space-y-2"><div class="text-center p-10 text-zinc-600 text-xs bg-zinc-900 rounded-xl border border-dashed border-zinc-800">Sincronizando banco de dados...</div></div>
         </div>
 
-        <div id="tela-social" class="tab-content hidden">
-
-            <!-- Sub-navegação das redes -->
-            <div class="flex gap-6 border-b border-zinc-800 mb-5">
-                <button id="tab-x" onclick="alternarFeedSocial('x')" class="cursor-pointer flex items-center gap-2 text-sm font-bold text-zinc-100 pb-3 border-b-2 border-zinc-100 transition">
-                    <i class="fa-brands fa-x-twitter"></i> X / Twitter
+        <!-- ═══════════════════ TELA FEED SOCIAL ═══════════════════ -->
+        <div id="tela-social" class="tab-content hidden bg-creme -mx-4 -mt-6 min-h-screen pb-28">
+            <div class="px-5 pt-10 pb-4">
+                <h1 class="text-[2.2rem] font-black italic text-stone-900 leading-none">Feed Social</h1>
+                <p id="feedSocialSubtitulo" class="text-xs text-stone-500 mt-2 leading-relaxed">Salve uma partida para gerar repercussão.</p>
+            </div>
+            <!-- Tabs -->
+            <div class="flex border-b border-stone-300 px-5 sticky top-0 bg-creme z-10">
+                <button id="tab-instagram" onclick="alternarFeedSocial('instagram')" class="flex items-center gap-2 text-sm font-bold text-stone-900 pb-3 pt-1 mr-6 border-b-2 border-stone-900 transition">
+                    <i class="fa-brands fa-instagram text-base"></i> Instagram
                 </button>
-                <button id="tab-instagram" onclick="alternarFeedSocial('instagram')" class="cursor-pointer flex items-center gap-2 text-sm font-bold text-zinc-500 pb-3 border-b-2 border-transparent transition">
-                    <i class="fa-brands fa-instagram"></i> Instagram
+                <button id="tab-x" onclick="alternarFeedSocial('x')" class="flex items-center gap-2 text-sm font-bold text-stone-400 pb-3 pt-1 border-b-2 border-transparent transition">
+                    <i class="fa-brands fa-x-twitter text-base"></i> X (Twitter)
                 </button>
             </div>
-
-            <!-- Feed: X / Twitter -->
-            <div id="feed-x" class="space-y-3 block">
-                <p class="text-xs text-zinc-600 text-center py-10">Salve um jogo para gerar posts no X.</p>
+            <!-- Feed Instagram -->
+            <div id="feed-instagram" class="block p-4 space-y-4">
+                <div class="bg-white rounded-2xl border border-stone-200 p-8 flex flex-col items-center gap-3 text-center">
+                    <i class="fa-brands fa-instagram text-3xl text-stone-300"></i>
+                    <p class="text-xs text-stone-400 leading-relaxed">Sem posts ainda. Registre uma partida em<br><span class="text-amber-600 font-bold">Inputs → Partida</span> e jogadores, torcedores e<br>portais começam a postar.</p>
+                </div>
             </div>
-
-            <!-- Feed: Instagram -->
-            <div id="feed-instagram" class="space-y-4 hidden">
-                <p class="text-xs text-zinc-600 text-center py-10">Salve um jogo para gerar posts do Instagram.</p>
+            <!-- Feed X -->
+            <div id="feed-x" class="hidden p-4 space-y-3">
+                <div class="bg-white rounded-2xl border border-stone-200 p-8 flex flex-col items-center gap-3 text-center">
+                    <i class="fa-brands fa-x-twitter text-3xl text-stone-300"></i>
+                    <p class="text-xs text-stone-400">Salve uma partida para gerar tweets.</p>
+                </div>
             </div>
-
         </div>
 
         <div id="tela-elenco" class="tab-content hidden space-y-4">
@@ -290,6 +328,141 @@
                 </div>
             </div>
 
+        </div>
+
+        <!-- ═══════════════════ TELA DIÁRIO ═══════════════════ -->
+        <div id="tela-diario" class="tab-content hidden bg-creme -mx-4 -mt-6 min-h-screen pb-28">
+            <div class="px-5 pt-10 pb-5 flex justify-between items-start">
+                <div>
+                    <p id="diarioLabel" class="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Temporada 2025</p>
+                    <h1 class="text-[2.2rem] font-black italic text-stone-900 leading-none mt-0.5">Diário</h1>
+                </div>
+                <button class="flex items-center gap-1.5 border border-stone-300 text-stone-500 text-[10px] font-bold uppercase tracking-widest px-3 py-2 rounded-lg hover:bg-stone-200 transition mt-2">
+                    <i class="fa-solid fa-arrow-up-from-bracket text-[9px]"></i> Exportar
+                </button>
+            </div>
+            <!-- Stats box -->
+            <div class="mx-4 rounded-2xl border border-stone-200 bg-white overflow-hidden mb-3">
+                <div class="px-4 py-2.5 border-b border-stone-100"><p class="text-[10px] font-black text-stone-400 uppercase tracking-widest">Temporada 2025</p></div>
+                <div class="divide-y divide-stone-100">
+                    <div class="flex justify-between items-center px-4 py-3"><span class="text-sm text-stone-600">Partidas</span><span id="diarioStatPartidas" class="text-sm font-black text-amber-500">0</span></div>
+                    <div class="flex justify-between items-center px-4 py-3"><span class="text-sm text-stone-600">Vitórias</span><span id="diarioStatVitorias" class="text-sm font-black text-emerald-600">0</span></div>
+                    <div class="flex justify-between items-center px-4 py-3"><span class="text-sm text-stone-600">Situações</span><span id="diarioStatSituacoes" class="text-sm font-black text-stone-900">0</span></div>
+                </div>
+            </div>
+            <!-- Tipos -->
+            <div class="mx-4 rounded-2xl border border-stone-200 bg-white overflow-hidden mb-4">
+                <div class="px-4 py-2.5 border-b border-stone-100"><p class="text-[10px] font-black text-stone-400 uppercase tracking-widest">Tipos</p></div>
+                <div class="divide-y divide-stone-100">
+                    <div class="flex justify-between items-center px-4 py-3"><span class="text-sm text-stone-600 flex items-center gap-2"><span class="w-5 h-5 rounded-full bg-stone-100 flex items-center justify-center text-[11px]">⚽</span> Partida</span><span id="diarioTipoPartidas" class="text-sm font-bold text-stone-900">0</span></div>
+                    <div class="flex justify-between items-center px-4 py-3"><span class="text-sm text-stone-600 flex items-center gap-2"><span class="w-5 h-5 rounded-full bg-stone-100 flex items-center justify-center text-[11px]">⚡</span> Situação</span><span id="diarioTipoSituacoes" class="text-sm font-bold text-stone-900">0</span></div>
+                </div>
+            </div>
+            <!-- Timeline -->
+            <div id="diarioTimeline" class="mx-4 space-y-3">
+                <p class="text-xs text-stone-400 text-center py-6">Carregando entradas...</p>
+            </div>
+        </div>
+
+        <!-- ═══════════════════ TELA SITUAÇÕES ═══════════════════ -->
+        <div id="tela-situacoes" class="tab-content hidden bg-creme -mx-4 -mt-6 min-h-screen pb-28">
+            <div class="px-5 pt-10 pb-5">
+                <h1 class="text-[2.2rem] font-black italic text-stone-900 leading-none">Situações</h1>
+                <p class="text-sm text-stone-500 mt-2">Eventos gerados pela IA após cada partida.</p>
+            </div>
+            <div id="listaSituacoes" class="mx-4 space-y-3">
+                <p class="text-xs text-stone-400 text-center py-10">Nenhuma situação registrada ainda.</p>
+            </div>
+        </div>
+
+        <!-- ═══════════════════ TELA COLETIVA ═══════════════════ -->
+        <div id="tela-coletiva" class="tab-content hidden bg-creme -mx-4 -mt-6 min-h-screen pb-28">
+            <div class="px-5 pt-10 pb-5">
+                <h1 class="text-[2.2rem] font-black italic text-stone-900 leading-none">Coletiva</h1>
+                <p class="text-sm text-stone-500 mt-2">Responda os jornalistas e veja a repercussão na imprensa.</p>
+            </div>
+            <!-- Sala de Imprensa card -->
+            <div class="mx-4 bg-zinc-900 rounded-2xl p-4 flex items-center gap-4 mb-6">
+                <div class="w-12 h-12 rounded-full bg-amber-500 flex items-center justify-center flex-shrink-0 shadow-lg">
+                    <i class="fa-solid fa-microphone text-white text-lg"></i>
+                </div>
+                <div>
+                    <p class="text-[10px] font-black text-amber-500 uppercase tracking-widest">Sala de Imprensa</p>
+                    <p id="coletivaContagem" class="text-sm text-zinc-400 mt-0.5">0 perguntas aguardando resposta</p>
+                </div>
+            </div>
+            <!-- Perguntas -->
+            <div class="px-5 mb-3 flex items-center gap-2">
+                <div class="w-[3px] h-4 bg-amber-500 rounded-full"></div>
+                <p class="text-[10px] font-black text-stone-900 uppercase tracking-widest">Perguntas Pendentes</p>
+            </div>
+            <div id="coletivaPerguntas" class="mx-4 space-y-4">
+                <p class="text-xs text-stone-400 py-6 text-center">Registre uma partida para gerar perguntas da imprensa.</p>
+            </div>
+        </div>
+
+        <!-- ═══════════════════ TELA COBERTURA ═══════════════════ -->
+        <div id="tela-cobertura" class="tab-content hidden bg-creme -mx-4 -mt-6 min-h-screen pb-28">
+            <div class="px-5 pt-10 pb-5">
+                <h1 class="text-[2.2rem] font-black italic text-stone-900 leading-none">Cobertura</h1>
+                <p class="text-sm text-stone-500 mt-2">A imprensa escreve sobre sua equipe após cada partida.</p>
+            </div>
+            <div id="listaCobertura" class="mx-4 space-y-3">
+                <p class="text-xs text-stone-400 text-center py-10">Salve uma partida para gerar a cobertura jornalística.</p>
+            </div>
+        </div>
+
+        <!-- ═══════════════════ TELA MAIS / INPUTS ═══════════════════ -->
+        <div id="tela-mais" class="tab-content hidden bg-creme -mx-4 -mt-6 min-h-screen pb-28">
+            <div class="px-5 pt-10 pb-6">
+                <p class="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-1">🏠 Entrada de Dados · FIFA → IA</p>
+                <h1 class="text-[2.2rem] font-black italic text-stone-900 leading-none">Inputs</h1>
+                <p class="text-sm text-stone-500 mt-2 leading-relaxed">Tire print direto do FIFA e suba aqui. A IA interpreta a imagem, atualiza os dados e a imprensa escreve a cobertura.</p>
+            </div>
+            <div class="mx-4 space-y-3">
+                <button onclick="mudarTela('sumula')" class="w-full bg-white rounded-2xl border border-stone-200 p-4 flex items-center gap-4 hover:bg-stone-50 active:bg-stone-100 transition text-left">
+                    <div class="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                        <i class="fa-solid fa-camera text-emerald-600 text-lg"></i>
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-sm font-bold text-stone-900">Registrar partida</p>
+                        <p class="text-xs text-stone-500 mt-0.5 leading-relaxed">Foto do placar final. A IA extrai resultado, artilheiros e gera a matéria.</p>
+                    </div>
+                    <i class="fa-solid fa-chevron-right text-stone-300 text-sm flex-shrink-0"></i>
+                </button>
+                <button onclick="mudarTelaDrawer('elenco')" class="w-full bg-white rounded-2xl border border-stone-200 p-4 flex items-center gap-4 hover:bg-stone-50 active:bg-stone-100 transition text-left">
+                    <div class="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center flex-shrink-0">
+                        <i class="fa-solid fa-table text-amber-600 text-lg"></i>
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-sm font-bold text-stone-900">Atualizar tabela</p>
+                        <p class="text-xs text-stone-500 mt-0.5 leading-relaxed">Foto da classificação do FIFA. A IA lê a tabela e atualiza a cobertura da rodada.</p>
+                    </div>
+                    <i class="fa-solid fa-chevron-right text-stone-300 text-sm flex-shrink-0"></i>
+                </button>
+                <button onclick="mudarTelaDrawer('calendario')" class="w-full bg-white rounded-2xl border border-stone-200 p-4 flex items-center gap-4 hover:bg-stone-50 active:bg-stone-100 transition text-left">
+                    <div class="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center flex-shrink-0">
+                        <i class="fa-regular fa-calendar text-blue-600 text-lg"></i>
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-sm font-bold text-stone-900">Calendário de jogos</p>
+                        <p class="text-xs text-stone-500 mt-0.5 leading-relaxed">Próximas partidas. Foto da tela de agenda ou cadastro manual.</p>
+                    </div>
+                    <i class="fa-solid fa-chevron-right text-stone-300 text-sm flex-shrink-0"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- ═══════════════════ TELA CELULAR ═══════════════════ -->
+        <div id="tela-celular" class="tab-content hidden bg-creme -mx-4 -mt-6 min-h-screen pb-28">
+            <div class="px-5 pt-10 pb-5">
+                <h1 class="text-[2.2rem] font-black italic text-stone-900 leading-none">Celular</h1>
+                <p class="text-sm text-stone-500 mt-2">Mensagens e notificações do celular do técnico.</p>
+            </div>
+            <div class="mx-4 text-center py-16 flex flex-col items-center gap-3">
+                <i class="fa-solid fa-mobile-screen text-stone-300 text-5xl"></i>
+                <p class="text-sm text-stone-400">Em breve.</p>
+            </div>
         </div>
 
         <!-- Modais de Cadastro CRUD -->
@@ -592,15 +765,91 @@
 
     </main>
 
-    <nav id="barraNavegacao" class="hidden bg-zinc-950/90 backdrop-blur border-t border-zinc-900 fixed bottom-0 w-full px-2 py-2.5 z-50">
-        <div class="max-w-md mx-auto flex justify-between items-center">
-            <button onclick="mudarTela('home', 'Home', 'fa-home')" class="nav-btn active w-1/5 flex flex-col items-center gap-1.5 text-zinc-100 transition"><i class="fa-solid fa-home text-lg"></i><span class="text-[8px] font-bold uppercase tracking-widest">Início</span></button>
-            <button onclick="mudarTela('sumula', 'Nova Súmula', 'fa-clipboard')" class="nav-btn w-1/5 flex flex-col items-center gap-1.5 text-zinc-600 hover:text-zinc-400 transition"><i class="fa-solid fa-clipboard text-lg"></i><span class="text-[8px] font-bold uppercase tracking-widest">Súmula</span></button>
-            <button onclick="mudarTela('calendario', 'Fixtures', 'fa-calendar')" class="nav-btn w-1/5 flex flex-col items-center gap-1.5 text-zinc-600 hover:text-zinc-400 transition"><i class="fa-solid fa-calendar text-lg"></i><span class="text-[8px] font-bold uppercase tracking-widest">Agenda</span></button>
-            <button onclick="mudarTela('social', 'Hub Social', 'fa-hashtag')" class="nav-btn w-1/5 flex flex-col items-center gap-1.5 text-zinc-600 hover:text-zinc-400 transition"><i class="fa-solid fa-hashtag text-lg"></i><span class="text-[8px] font-bold uppercase tracking-widest">Social</span></button>
-            <button onclick="mudarTela('elenco', 'Squad', 'fa-users')" class="nav-btn w-1/5 flex flex-col items-center gap-1.5 text-zinc-600 hover:text-zinc-400 transition"><i class="fa-solid fa-users text-lg"></i><span class="text-[8px] font-bold uppercase tracking-widest">Elenco</span></button>
+    <nav id="barraNavegacao" class="hidden bg-black border-t border-zinc-900 fixed bottom-0 w-full py-2 z-50">
+        <div class="max-w-md mx-auto flex justify-between items-center px-2">
+            <button data-nav="home"     onclick="mudarTela('home')"     class="nav-btn flex flex-col items-center gap-1 w-1/5 py-1 text-amber-500 transition">
+                <i class="fa-solid fa-chart-simple text-xl"></i>
+                <span class="text-[8px] font-bold uppercase tracking-widest">Início</span>
+            </button>
+            <button data-nav="sumula"   onclick="mudarTela('sumula')"   class="nav-btn flex flex-col items-center gap-1 w-1/5 py-1 text-zinc-600 hover:text-zinc-400 transition">
+                <i class="fa-solid fa-circle-dot text-xl"></i>
+                <span class="text-[8px] font-bold uppercase tracking-widest">Registrar</span>
+            </button>
+            <button data-nav="situacoes" onclick="mudarTela('situacoes')" class="nav-btn flex flex-col items-center gap-1 w-1/5 py-1 text-zinc-600 hover:text-zinc-400 transition">
+                <i class="fa-solid fa-bolt text-xl"></i>
+                <span class="text-[8px] font-bold uppercase tracking-widest">Situações</span>
+            </button>
+            <button data-nav="celular"  onclick="mudarTela('celular')"  class="nav-btn flex flex-col items-center gap-1 w-1/5 py-1 text-zinc-600 hover:text-zinc-400 transition relative">
+                <i class="fa-solid fa-mobile-screen text-xl"></i>
+                <span id="badgeCelular" class="absolute -top-0.5 right-4 w-4 h-4 bg-amber-500 rounded-full text-[8px] font-black text-black items-center justify-center hidden">3</span>
+                <span class="text-[8px] font-bold uppercase tracking-widest">Celular</span>
+            </button>
+            <button data-nav="mais"     onclick="abrirDrawer()"         class="nav-btn flex flex-col items-center gap-1 w-1/5 py-1 text-zinc-600 hover:text-zinc-400 transition">
+                <i class="fa-solid fa-ellipsis text-xl"></i>
+                <span class="text-[8px] font-bold uppercase tracking-widest">Mais</span>
+            </button>
         </div>
     </nav>
+
+    <!-- ══════════════ DRAWER DE NAVEGAÇÃO ══════════════ -->
+    <div id="drawerOverlay" onclick="fecharDrawer()" class="fixed inset-0 z-[75] bg-black/50 hidden pointer-events-none"></div>
+
+    <div id="drawerNav" class="fixed inset-x-0 bottom-0 z-[80] bg-white rounded-t-3xl shadow-2xl max-w-md mx-auto">
+        <!-- Handle + fechar -->
+        <div class="flex items-center justify-between px-5 pt-3 pb-1">
+            <div class="flex-1"></div>
+            <div class="w-10 h-1 bg-stone-200 rounded-full mx-auto"></div>
+            <div class="flex-1 flex justify-end">
+                <button onclick="fecharDrawer()" class="text-stone-400 hover:text-stone-700 p-1.5 transition">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+        </div>
+        <div class="overflow-y-auto max-h-[72vh] px-4 pb-10 space-y-4 hide-scrollbar">
+
+            <!-- INPUTS -->
+            <div>
+                <p class="text-[10px] font-black text-stone-400 uppercase tracking-widest px-1 mb-1">Inputs</p>
+                <div class="space-y-0.5">
+                    <button onclick="mudarTelaDrawer('diario')"    data-tela="diario"    class="drawer-item w-full flex items-center gap-3 px-3 py-3.5 rounded-xl hover:bg-stone-50 transition text-left"><i class="fa-solid fa-layer-group text-stone-500 w-5 text-center text-sm"></i><span class="text-sm font-bold text-stone-800 tracking-wide">Tudo</span></button>
+                    <button onclick="mudarTelaDrawer('elenco')"    data-tela="elenco"    class="drawer-item w-full flex items-center gap-3 px-3 py-3.5 rounded-xl hover:bg-stone-50 transition text-left"><i class="fa-solid fa-table text-stone-500 w-5 text-center text-sm"></i><span class="text-sm font-bold text-stone-800 tracking-wide">Tabela</span></button>
+                    <button onclick="mudarTelaDrawer('calendario')" data-tela="calendario" class="drawer-item w-full flex items-center gap-3 px-3 py-3.5 rounded-xl hover:bg-stone-50 transition text-left"><i class="fa-regular fa-calendar text-stone-500 w-5 text-center text-sm"></i><span class="text-sm font-bold text-stone-800 tracking-wide">Calendário</span></button>
+                </div>
+            </div>
+
+            <!-- CLUBE -->
+            <div class="border-t border-stone-100 pt-4">
+                <p class="text-[10px] font-black text-stone-400 uppercase tracking-widest px-1 mb-1">Clube</p>
+                <div class="space-y-0.5">
+                    <button onclick="mudarTelaDrawer('elenco')"    data-tela="elenco"    class="drawer-item w-full flex items-center gap-3 px-3 py-3.5 rounded-xl hover:bg-stone-50 transition text-left"><i class="fa-solid fa-trophy text-stone-500 w-5 text-center text-sm"></i><span class="text-sm font-bold text-stone-800 tracking-wide">Tabelas</span></button>
+                    <button onclick="mudarTelaDrawer('calendario')" data-tela="calendario" class="drawer-item w-full flex items-center gap-3 px-3 py-3.5 rounded-xl hover:bg-stone-50 transition text-left"><i class="fa-solid fa-wand-magic-sparkles text-stone-500 w-5 text-center text-sm"></i><span class="text-sm font-bold text-stone-800 tracking-wide">Pré-Jogo</span></button>
+                    <button onclick="mudarTelaDrawer('elenco')"    data-tela="elenco"    class="drawer-item w-full flex items-center gap-3 px-3 py-3.5 rounded-xl hover:bg-stone-50 transition text-left"><i class="fa-solid fa-users text-stone-500 w-5 text-center text-sm"></i><span class="text-sm font-bold text-stone-800 tracking-wide">Elenco</span></button>
+                    <button                                                                class="drawer-item w-full flex items-center gap-3 px-3 py-3.5 rounded-xl hover:bg-stone-50 transition text-left"><i class="fa-solid fa-right-left text-stone-500 w-5 text-center text-sm"></i><span class="text-sm font-bold text-stone-800 tracking-wide">Transferências</span></button>
+                    <button onclick="mudarTelaDrawer('diario')"    data-tela="diario"    class="drawer-item w-full flex items-center gap-3 px-3 py-3.5 rounded-xl hover:bg-stone-50 transition text-left"><i class="fa-solid fa-book text-stone-500 w-5 text-center text-sm"></i><span class="text-sm font-bold text-stone-800 tracking-wide">Diário</span></button>
+                </div>
+            </div>
+
+            <!-- BASTIDORES -->
+            <div class="border-t border-stone-100 pt-4">
+                <p class="text-[10px] font-black text-stone-400 uppercase tracking-widest px-1 mb-1">Bastidores</p>
+                <div class="space-y-0.5">
+                    <button onclick="mudarTelaDrawer('cobertura')" data-tela="cobertura" class="drawer-item w-full flex items-center gap-3 px-3 py-3.5 rounded-xl hover:bg-stone-50 transition text-left"><i class="fa-solid fa-book-open text-stone-500 w-5 text-center text-sm"></i><span class="text-sm font-bold text-stone-800 tracking-wide">Cobertura</span></button>
+                    <button onclick="mudarTelaDrawer('coletiva')"  data-tela="coletiva"  class="drawer-item w-full flex items-center gap-3 px-3 py-3.5 rounded-xl hover:bg-stone-50 transition text-left"><i class="fa-solid fa-microphone text-stone-500 w-5 text-center text-sm"></i><span class="text-sm font-bold text-stone-800 tracking-wide">Coletiva</span></button>
+                    <button onclick="mudarTelaDrawer('social')"    data-tela="social"    class="drawer-item w-full flex items-center gap-3 px-3 py-3.5 rounded-xl hover:bg-stone-50 transition text-left"><i class="fa-solid fa-hashtag text-stone-500 w-5 text-center text-sm"></i><span class="text-sm font-bold text-stone-800 tracking-wide">Feed Social</span></button>
+                </div>
+            </div>
+
+            <!-- TÉCNICO -->
+            <div class="border-t border-stone-100 pt-4">
+                <p class="text-[10px] font-black text-stone-400 uppercase tracking-widest px-1 mb-1">Técnico</p>
+                <div class="space-y-0.5">
+                    <button class="drawer-item w-full flex items-center gap-3 px-3 py-3.5 rounded-xl hover:bg-stone-50 transition text-left"><i class="fa-regular fa-heart text-stone-500 w-5 text-center text-sm"></i><span class="text-sm font-bold text-stone-800 tracking-wide">Vida Pessoal</span></button>
+                    <button onclick="fazerLogout()" class="drawer-item w-full flex items-center gap-3 px-3 py-3.5 rounded-xl hover:bg-rose-50 transition text-left"><i class="fa-solid fa-right-from-bracket text-rose-400 w-5 text-center text-sm"></i><span class="text-sm font-bold text-rose-500 tracking-wide">Sair</span></button>
+                </div>
+            </div>
+
+        </div>
+    </div>
 
     <datalist id="listaElencoFixo"></datalist>
     <script src="app.js?v=4"></script>

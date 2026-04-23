@@ -31,7 +31,7 @@ async function iniciarApp() {
             // Abastecer o Perfil com Case Tratado Estilisticamente
             window.atualizarHomeDashboard(data);
             
-            window.mudarTela('home', 'Home', 'fa-home');
+            window.mudarTela('home');
             atualizarDashboard();
             await window.carregarElenco();
             await carregarCompeticoes();
@@ -107,21 +107,222 @@ window.fazerLogout = function() {
 }
 
 window.atualizarHomeDashboard = function(carreira) {
-    if(!carreira) return;
-    
-    // Title Case Transformer
-    const toTitleCase = (str) => str.replace(/\w\S*/g, txt => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
-    
-    document.getElementById('homeNomeTreinador').innerText = toTitleCase(carreira.treinador);
-    document.getElementById('homeNomeClube').innerHTML = `<i class="fa-solid fa-shield text-zinc-600"></i> ` + toTitleCase(carreira.clube);
-    
-    document.getElementById('homeIdadeTreinador').innerText = "42 Anos";
-    document.getElementById('homeNacionalidadeTreinador').innerText = "Brasileiro";
-    document.getElementById('homeReputacaoTreinador').innerHTML = `Intocável <i class="fa-solid fa-star text-[10px]"></i>`;
-    
-    // Carrossel será preenchido por carregarCompeticoes()
-    const elCarrossel = document.getElementById('homeCompeticoesCarrossel');
-    if(elCarrossel) elCarrossel.innerHTML = '<div class="min-w-[160px] snap-center bg-zinc-900/40 border border-dashed border-zinc-800 rounded-xl p-3 text-center flex-shrink-0 flex items-center justify-center"><p class="text-[10px] text-zinc-700 font-bold uppercase tracking-widest">Carregando...</p></div>';
+    if (!carreira) return;
+    const toTitle = (str) => str ? str.replace(/\w\S*/g, t => t.charAt(0).toUpperCase() + t.substr(1).toLowerCase()) : '';
+    const clubeEl = document.getElementById('homeNomeClube');
+    if (clubeEl) clubeEl.innerText = toTitle(carreira.clube || 'Clube');
+    renderizarMoralBar(carreira.moral ?? 50);
+}
+
+// ── Moral Bar ────────────────────────────────────────────────
+function renderizarMoralBar(moral) {
+    const bar = document.getElementById('homeMoralBar');
+    const num = document.getElementById('homeMoralNum');
+    if (!bar) return;
+    const val  = Math.max(0, Math.min(100, Math.round(moral || 50)));
+    if (num) num.innerText = val;
+    const fill = Math.round((val / 100) * 10);
+    bar.innerHTML = Array.from({ length: 10 }, (_, i) =>
+        `<div class="moral-seg ${i < fill ? 'bg-amber-500' : 'bg-zinc-800'}"></div>`
+    ).join('');
+}
+
+// ── Home Stats (V/E/D) + Próximo Jogo ───────────────────────
+async function carregarHomeStats() {
+    try {
+        const { data } = await window.meuSupabase.from('partidas')
+            .select('gols_pro, gols_contra').eq('carreira_id', carreiraAtualId);
+        let v = 0, e = 0, d = 0;
+        (data || []).forEach(p => {
+            if      (p.gols_pro > p.gols_contra) v++;
+            else if (p.gols_pro === p.gols_contra) e++;
+            else d++;
+        });
+        ['homeStatV','homeStatE','homeStatD'].forEach((id, i) => {
+            const el = document.getElementById(id);
+            if (el) el.innerText = [v, e, d][i];
+        });
+    } catch(e) { console.error('homeStats:', e); }
+    try {
+        const { data } = await window.meuSupabase.from('agenda')
+            .select('adversario, data, local, competicao_id')
+            .eq('carreira_id', carreiraAtualId)
+            .order('data', { ascending: true })
+            .limit(1);
+        const prox = data && data[0];
+        if (prox) {
+            const el = (id) => document.getElementById(id);
+            if (el('homeProxAdversario')) el('homeProxAdversario').innerText = prox.adversario || 'A definir';
+            if (el('homeProxData')) el('homeProxData').innerText = prox.data
+                ? new Date(prox.data + 'T12:00:00').toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' })
+                : 'Sem data';
+            const compNome = competicoesAtivas.find(c => c.id === prox.competicao_id)?.nome || '';
+            if (el('homeProxInfo')) el('homeProxInfo').innerText = `${prox.local || 'Casa'}${compNome ? ' · ' + compNome : ''}`;
+        }
+    } catch(e) { console.error('homeProxJogo:', e); }
+    // Label da competição no topo
+    if (competicoesAtivas.length > 0) {
+        const labelEl = document.getElementById('homeCompLabel');
+        if (labelEl) labelEl.innerText = `${competicoesAtivas[0].nome.toUpperCase()} · TEMPORADA ${new Date().getFullYear()}`;
+    }
+}
+
+// ── NO RADAR ─────────────────────────────────────────────────
+async function carregarNoRadar() {
+    const el = document.getElementById('homeNoRadar');
+    if (!el) return;
+    try {
+        const { data } = await window.meuSupabase.from('situacoes')
+            .select('tipo, titulo, criado_em')
+            .eq('carreira_id', carreiraAtualId)
+            .order('criado_em', { ascending: false })
+            .limit(3);
+        if (!data || data.length === 0) {
+            el.innerHTML = '<p class="text-xs text-zinc-700 py-4 text-center">Registre uma partida para gerar situações.</p>';
+            return;
+        }
+        const grads = ['from-zinc-900 via-zinc-800 to-zinc-900','from-zinc-900 via-blue-950 to-zinc-900','from-zinc-900 via-rose-950 to-zinc-900'];
+        el.innerHTML = data.map((s, i) => {
+            const dt = s.criado_em ? new Date(s.criado_em).toLocaleDateString('pt-BR',{day:'2-digit',month:'short'}) : '';
+            return `<div class="rounded-2xl bg-gradient-to-br ${grads[i%3]} min-h-[155px] flex flex-col justify-between p-4 cursor-pointer active:opacity-80" onclick="mudarTela('situacoes')">
+                <div class="flex items-center gap-2"><span class="text-[9px] font-black uppercase tracking-widest text-rose-400 bg-rose-500/20 border border-rose-500/30 px-2 py-0.5 rounded">${s.tipo||'SITUAÇÃO'}</span><span class="text-[9px] text-zinc-500">${dt}</span></div>
+                <p class="text-base font-black italic text-white leading-tight mt-4">${s.titulo||'Nova situação'}</p>
+            </div>`;
+        }).join('');
+    } catch(e) { console.error('noRadar:', e); }
+}
+
+// ── DIÁRIO ───────────────────────────────────────────────────
+window.carregarDiario = async function() {
+    const timeline = document.getElementById('diarioTimeline');
+    if (!timeline) return;
+    timeline.innerHTML = '<p class="text-xs text-stone-400 text-center py-6">Carregando...</p>';
+    try {
+        const [{ data: partidas }, { data: situacoes }] = await Promise.all([
+            window.meuSupabase.from('partidas').select('adversario,gols_pro,gols_contra,criado_em').eq('carreira_id', carreiraAtualId).order('criado_em',{ascending:false}),
+            window.meuSupabase.from('situacoes').select('titulo,tipo,criado_em').eq('carreira_id', carreiraAtualId).order('criado_em',{ascending:false})
+        ]);
+        const pArr = partidas || [], sArr = situacoes || [];
+        const v    = pArr.filter(p => p.gols_pro > p.gols_contra).length;
+        const set  = (id, val) => { const e = document.getElementById(id); if(e) e.innerText = val; };
+        set('diarioStatPartidas', pArr.length); set('diarioStatVitorias', v); set('diarioStatSituacoes', sArr.length);
+        set('diarioTipoPartidas', pArr.length); set('diarioTipoSituacoes', sArr.length);
+
+        const entradas = [
+            ...pArr.map(p => ({ tipo:'PARTIDA', icone:'⚽', titulo:`${p.gols_pro} × ${p.gols_contra} · ${p.adversario}`, sub: p.gols_pro > p.gols_contra ? 'Vitória' : p.gols_pro === p.gols_contra ? 'Empate' : 'Derrota', data: p.criado_em })),
+            ...sArr.map(s => ({ tipo:'SITUAÇÃO', icone:'⚡', titulo: s.titulo, sub: s.tipo||'Situação', data: s.criado_em }))
+        ].sort((a,b) => new Date(b.data) - new Date(a.data));
+
+        if (!entradas.length) { timeline.innerHTML = '<p class="text-xs text-stone-400 text-center py-6">Nenhuma entrada ainda.</p>'; return; }
+
+        timeline.innerHTML = entradas.map(e => {
+            const dt = e.data ? new Date(e.data).toLocaleDateString('pt-BR',{day:'2-digit',month:'short',year:'numeric'}) : '';
+            return `<div class="bg-white rounded-2xl border border-stone-200 overflow-hidden">
+                <div class="px-4 py-2 border-b border-stone-100 flex items-center gap-2">
+                    <span class="text-[9px] font-black text-stone-400 uppercase tracking-widest">${dt} · ${e.tipo}</span>
+                </div>
+                <div class="p-4 flex gap-3 items-start">
+                    <span class="text-2xl flex-shrink-0 mt-0.5">${e.icone}</span>
+                    <div><p class="text-sm font-black italic text-stone-900 leading-tight">${e.titulo||'--'}</p><p class="text-xs text-stone-400 mt-0.5">${e.sub}</p></div>
+                </div>
+            </div>`;
+        }).join('');
+    } catch(err) { console.error(err); timeline.innerHTML = '<p class="text-xs text-rose-400 text-center py-6">Erro ao carregar.</p>'; }
+}
+
+// ── SITUAÇÕES ────────────────────────────────────────────────
+window.carregarSituacoes = async function() {
+    const el = document.getElementById('listaSituacoes');
+    if (!el) return;
+    el.innerHTML = '<p class="text-xs text-stone-400 text-center py-6">Carregando...</p>';
+    try {
+        const { data } = await window.meuSupabase.from('situacoes')
+            .select('*').eq('carreira_id', carreiraAtualId)
+            .order('criado_em', { ascending: false });
+        if (!data || !data.length) { el.innerHTML = '<p class="text-xs text-stone-400 text-center py-10">Nenhuma situação ainda.</p>'; return; }
+        el.innerHTML = data.map(s => {
+            const dt = s.criado_em ? new Date(s.criado_em).toLocaleDateString('pt-BR',{day:'2-digit',month:'short',year:'numeric'}) : '';
+            return `<div class="bg-white rounded-2xl border border-stone-200 p-4">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-[9px] font-black text-rose-500 bg-rose-50 border border-rose-200 px-2 py-0.5 rounded uppercase tracking-widest">${s.tipo||'SITUAÇÃO'}</span>
+                    <span class="text-[9px] text-stone-400">${dt}</span>
+                </div>
+                <p class="text-sm font-black italic text-stone-900 leading-snug">${s.titulo||'--'}</p>
+                ${s.descricao ? `<p class="text-xs text-stone-500 mt-2 leading-relaxed">${s.descricao}</p>` : ''}
+            </div>`;
+        }).join('');
+    } catch(e) { el.innerHTML = '<p class="text-xs text-rose-400 text-center py-6">Erro ao carregar.</p>'; }
+}
+
+// ── COLETIVA ─────────────────────────────────────────────────
+window.carregarColetiva = async function() {
+    const el = document.getElementById('coletivaPerguntas');
+    const cnt = document.getElementById('coletivaContagem');
+    if (!el) return;
+    el.innerHTML = '<p class="text-xs text-stone-400 py-4 text-center">Carregando...</p>';
+    try {
+        const { data, error } = await window.meuSupabase.from('coletiva')
+            .select('*').eq('carreira_id', carreiraAtualId)
+            .eq('respondida', false).order('criado_em', { ascending: false });
+        if (error) throw error;
+        const pergs = data || [];
+        if (cnt) cnt.innerText = `${pergs.length} pergunta${pergs.length!==1?'s':''} aguardando resposta`;
+        if (!pergs.length) { el.innerHTML = '<p class="text-xs text-stone-400 py-6 text-center">Registre uma partida para gerar perguntas da imprensa.</p>'; return; }
+        el.innerHTML = pergs.map(p => {
+            const clsTipo = p.tipo==='AGRESSIVA' ? 'text-rose-600 bg-rose-50 border-rose-200' :
+                            p.tipo==='PROVOCATIVA' ? 'text-amber-700 bg-amber-50 border-amber-200' :
+                            'text-stone-500 bg-stone-100 border-stone-200';
+            return `<div class="bg-white rounded-2xl border border-stone-200 overflow-hidden">
+                <div class="px-4 pt-3 pb-1 flex items-center justify-between">
+                    <div class="flex items-center gap-2 text-xs text-stone-400">
+                        <i class="fa-solid fa-microphone text-[10px]"></i>
+                        <span>${p.jornalista||'Jornalista'} · ${p.veiculo||'Imprensa'}</span>
+                    </div>
+                    <span class="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded border ${clsTipo}">${p.tipo||'AMISTOSA'}</span>
+                </div>
+                <div class="px-4 py-3">
+                    <p class="text-sm text-stone-800 font-medium leading-snug">"${p.pergunta}"</p>
+                </div>
+                <div class="px-4 pb-4">
+                    <textarea id="resp-${p.id}" rows="3" placeholder="Sua resposta como técnico..."
+                        class="w-full border border-stone-200 rounded-xl p-3 text-sm text-stone-800 outline-none focus:border-amber-400 transition resize-none bg-stone-50"></textarea>
+                    <button onclick="responderColetiva('${p.id}')" class="mt-2 bg-amber-500 hover:bg-amber-400 active:bg-amber-600 text-white text-xs font-black uppercase tracking-widest px-4 py-2.5 rounded-xl flex items-center gap-2 transition">
+                        <i class="fa-solid fa-paper-plane text-[10px]"></i> Responder
+                    </button>
+                </div>
+            </div>`;
+        }).join('');
+    } catch(e) { console.error(e); el.innerHTML = '<p class="text-xs text-rose-400 py-4 text-center">Erro ao carregar.</p>'; }
+}
+
+window.responderColetiva = async function(id) {
+    const ta = document.getElementById('resp-' + id);
+    if (!ta || !ta.value.trim()) { alert('Escreva uma resposta antes de enviar.'); return; }
+    try {
+        await window.meuSupabase.from('coletiva').update({ resposta: ta.value.trim(), respondida: true }).eq('id', id);
+        await window.carregarColetiva();
+    } catch(e) { alert('Erro: ' + e.message); }
+}
+
+// ── COBERTURA ────────────────────────────────────────────────
+window.carregarCobertura = async function() {
+    const el = document.getElementById('listaCobertura');
+    if (!el) return;
+    el.innerHTML = '<p class="text-xs text-stone-400 text-center py-10">Carregando...</p>';
+    try {
+        const { data } = await window.meuSupabase.from('cobertura')
+            .select('titulo, conteudo, criado_em').eq('carreira_id', carreiraAtualId)
+            .order('criado_em', { ascending: false });
+        if (!data || !data.length) { el.innerHTML = '<p class="text-xs text-stone-400 text-center py-10">Salve uma partida para gerar a cobertura jornalística.</p>'; return; }
+        el.innerHTML = data.map(c => {
+            const dt = c.criado_em ? new Date(c.criado_em).toLocaleDateString('pt-BR',{day:'2-digit',month:'short',year:'numeric'}) : '';
+            return `<div class="bg-white rounded-2xl border border-stone-200 p-4">
+                <p class="text-[10px] text-stone-400 font-bold uppercase tracking-widest mb-1">${dt}</p>
+                <p class="text-sm font-black italic text-stone-900 leading-tight mb-2">${c.titulo||'Cobertura'}</p>
+                <p class="text-xs text-stone-600 leading-relaxed">${c.conteudo||''}</p>
+            </div>`;
+        }).join('');
+    } catch(e) { el.innerHTML = '<p class="text-xs text-stone-400 text-center py-10">Salve uma partida para gerar a cobertura jornalística.</p>'; }
 }
 
 window.carregarElenco = async function() {
@@ -424,24 +625,87 @@ window.atualizarDashboard = async function() {
     } catch (e) {}
 }
 
-window.mudarTela = function(idTela, titulo, icone) {
+window.mudarTela = function(idTela) {
+    // Esconde todas as telas
     document.querySelectorAll('.tab-content').forEach(t => { t.classList.add('hidden'); t.classList.remove('block'); });
-    document.getElementById('tela-' + idTela).classList.remove('hidden'); document.getElementById('tela-' + idTela).classList.add('block');
-    document.getElementById('tituloTela').innerHTML = `<i class="fa-solid ${icone} text-base"></i> ${titulo}`;
-    
-    document.querySelectorAll('.nav-btn').forEach(b => { 
-        b.classList.remove('text-zinc-100'); 
-        b.classList.add('text-zinc-600'); 
-    });
-    
-    if (event && event.currentTarget && event.currentTarget.classList.contains('nav-btn')) {
-        event.currentTarget.classList.remove('text-zinc-600'); 
-        event.currentTarget.classList.add('text-zinc-100');
-    } else if (idTela === 'sumula') {
-        document.querySelectorAll('.nav-btn')[1].classList.remove('text-zinc-600'); 
-        document.querySelectorAll('.nav-btn')[1].classList.add('text-zinc-100');
+    const tela = document.getElementById('tela-' + idTela);
+    if (!tela) return;
+    tela.classList.remove('hidden');
+    tela.classList.add('block');
+
+    // Mostra/esconde o header fixo (home é headerless)
+    const header = document.getElementById('appHeader');
+    if (header) {
+        header.classList.toggle('hidden', idTela === 'home');
     }
-    window.scrollTo(0, 0); 
+
+    // Botão de sair no header — ocultar (está agora no drawer)
+    const btnSair = document.getElementById('btnSair');
+    if (btnSair) btnSair.classList.add('hidden');
+
+    // Destaca o botão de nav correto
+    document.querySelectorAll('.nav-btn').forEach(b => {
+        b.classList.remove('text-amber-500');
+        b.classList.add('text-zinc-600');
+    });
+    const navMap = { home: 0, sumula: 1, situacoes: 2, celular: 3 };
+    const navBtns = document.querySelectorAll('.nav-btn');
+    if (navMap[idTela] !== undefined && navBtns[navMap[idTela]]) {
+        navBtns[navMap[idTela]].classList.remove('text-zinc-600');
+        navBtns[navMap[idTela]].classList.add('text-amber-500');
+    }
+
+    // Carrega dados específicos de cada tela
+    if (idTela === 'home')      { carregarHomeStats(); carregarNoRadar(); }
+    if (idTela === 'diario')    carregarDiario();
+    if (idTela === 'coletiva')  carregarColetiva();
+    if (idTela === 'situacoes') carregarSituacoes();
+    if (idTela === 'cobertura') carregarCobertura();
+
+    window.scrollTo(0, 0);
+}
+
+// ── DRAWER ──────────────────────────────────────────────────
+window.abrirDrawer = function() {
+    const overlay = document.getElementById('drawerOverlay');
+    const drawer  = document.getElementById('drawerNav');
+    if (!overlay || !drawer) return;
+    overlay.classList.remove('hidden');
+    overlay.style.pointerEvents = 'auto';
+    requestAnimationFrame(() => {
+        overlay.classList.add('drawer-aberto');
+        drawer.classList.add('drawer-aberto');
+    });
+}
+
+window.fecharDrawer = function() {
+    const overlay = document.getElementById('drawerOverlay');
+    const drawer  = document.getElementById('drawerNav');
+    if (!overlay || !drawer) return;
+    overlay.classList.remove('drawer-aberto');
+    drawer.classList.remove('drawer-aberto');
+    setTimeout(() => {
+        overlay.classList.add('hidden');
+        overlay.style.pointerEvents = 'none';
+    }, 310);
+}
+
+window.mudarTelaDrawer = function(idTela) {
+    // Destaca item ativo no drawer
+    document.querySelectorAll('.drawer-item').forEach(item => {
+        const t = item.getAttribute('data-tela');
+        if (t === idTela) {
+            item.classList.add('bg-amber-50');
+            item.querySelectorAll('i').forEach(i => { i.classList.replace('text-stone-500', 'text-amber-600'); });
+            item.querySelectorAll('span').forEach(s => { s.classList.replace('text-stone-800', 'text-amber-700'); });
+        } else {
+            item.classList.remove('bg-amber-50');
+            item.querySelectorAll('i').forEach(i => { i.classList.replace('text-amber-600', 'text-stone-500'); });
+            item.querySelectorAll('span').forEach(s => { s.classList.replace('text-amber-700', 'text-stone-800'); });
+        }
+    });
+    fecharDrawer();
+    setTimeout(() => window.mudarTela(idTela), 320);
 }
 
 // FUNCAO FAKE DESCARTADA
@@ -452,27 +716,27 @@ window.simularIAGemini = async function(adv, pro, contra, detalhes) {
     };
 }
 
-// SUB-NAVEGAÇÃO DA ABA SOCIAL
+// SUB-NAVEGAÇÃO DO FEED SOCIAL
 window.alternarFeedSocial = function(rede) {
     const feedX    = document.getElementById('feed-x');
     const feedInst = document.getElementById('feed-instagram');
     const tabX     = document.getElementById('tab-x');
     const tabInst  = document.getElementById('tab-instagram');
+    if (!feedX || !feedInst) return;
+
+    const activeTab   = 'text-stone-900 border-stone-900';
+    const inactiveTab = 'text-stone-400 border-transparent';
 
     if (rede === 'x') {
         feedX.classList.remove('hidden');    feedX.classList.add('block');
         feedInst.classList.add('hidden');    feedInst.classList.remove('block');
-        tabX.classList.replace('text-zinc-500', 'text-zinc-100');
-        tabX.classList.replace('border-transparent', 'border-zinc-100');
-        tabInst.classList.replace('text-zinc-100', 'text-zinc-500');
-        tabInst.classList.replace('border-zinc-100', 'border-transparent');
+        tabX.className    = tabX.className.replace(/text-\S+/g,'').replace(/border-\S+/g,'') + ` flex items-center gap-2 text-sm font-bold pb-3 pt-1 mr-6 border-b-2 ${activeTab}`;
+        tabInst.className = tabInst.className.replace(/text-\S+/g,'').replace(/border-\S+/g,'') + ` flex items-center gap-2 text-sm font-bold pb-3 pt-1 border-b-2 ${inactiveTab}`;
     } else {
         feedInst.classList.remove('hidden'); feedInst.classList.add('block');
         feedX.classList.add('hidden');       feedX.classList.remove('block');
-        tabInst.classList.replace('text-zinc-500', 'text-zinc-100');
-        tabInst.classList.replace('border-transparent', 'border-zinc-100');
-        tabX.classList.replace('text-zinc-100', 'text-zinc-500');
-        tabX.classList.replace('border-zinc-100', 'border-transparent');
+        tabInst.className = tabInst.className.replace(/text-\S+/g,'').replace(/border-\S+/g,'') + ` flex items-center gap-2 text-sm font-bold pb-3 pt-1 mr-6 border-b-2 ${activeTab}`;
+        tabX.className    = tabX.className.replace(/text-\S+/g,'').replace(/border-\S+/g,'') + ` flex items-center gap-2 text-sm font-bold pb-3 pt-1 border-b-2 ${inactiveTab}`;
     }
 }
 
@@ -680,8 +944,8 @@ window.salvarPartida = async function() {
                         }
                     });
 
-                    // Vai direto para a rede que teve mais posts (X por padrão)
-                    alternarFeedSocial('x');
+                    // Vai direto para Instagram (nova ordem de tabs)
+                    alternarFeedSocial('instagram');
                 }
             } else {
                 console.error("Vercel falhou ao gerar posts sociais.");
@@ -689,13 +953,59 @@ window.salvarPartida = async function() {
         } catch(err) {
             console.error(err);
         }
-        
+
         const partidaPayload = { carreira_id: carreiraAtualId, adversario: adv, gols_pro: parseInt(pro), gols_contra: parseInt(contra), fato_do_jogo: fatoJson };
         if (agendaAtual.length > 0 && agendaAtual[0].competicao_id) {
             partidaPayload.competicao_id = agendaAtual[0].competicao_id;
         }
-        const { error: partidaErr } = await window.meuSupabase.from('partidas').insert([partidaPayload]);
+        const { data: partidaSalva, error: partidaErr } = await window.meuSupabase.from('partidas').insert([partidaPayload]).select().single();
         if (partidaErr) throw new Error("Supabase: " + partidaErr.message);
+        const partidaId = partidaSalva?.id || null;
+
+        // ── Gera Coletiva (perguntas de imprensa) ──────────────
+        try {
+            const resCol = await fetch('/api/gerar-coletiva', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ detalhesParaIA })
+            });
+            if (resCol.ok) {
+                const { perguntas } = await resCol.json();
+                if (perguntas && perguntas.length) {
+                    const rows = perguntas.map(q => ({
+                        carreira_id: carreiraAtualId,
+                        partida_id: partidaId,
+                        jornalista: q.jornalista,
+                        veiculo: q.veiculo,
+                        tipo: q.tipo,
+                        pergunta: q.pergunta
+                    }));
+                    await window.meuSupabase.from('coletiva').insert(rows);
+                }
+            }
+        } catch(e) { console.warn('Coletiva IA skip:', e.message); }
+
+        // ── Gera Situações (NO RADAR) ──────────────────────────
+        try {
+            const resSit = await fetch('/api/gerar-situacoes', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ detalhesParaIA })
+            });
+            if (resSit.ok) {
+                const { situacoes } = await resSit.json();
+                if (situacoes && situacoes.length) {
+                    const rows = situacoes.map(s => ({
+                        carreira_id: carreiraAtualId,
+                        partida_id: partidaId,
+                        tipo: s.tipo,
+                        titulo: s.titulo,
+                        descricao: s.descricao
+                    }));
+                    await window.meuSupabase.from('situacoes').insert(rows);
+                }
+            }
+        } catch(e) { console.warn('Situações IA skip:', e.message); }
         
         if (agendaAtual.length > 0 && agendaAtual[0].adversario === adv) {
             const jogoDeletado = agendaAtual[0];
@@ -714,11 +1024,11 @@ window.salvarPartida = async function() {
         
         if (window.renderizarAvaliacaoRapida) window.renderizarAvaliacaoRapida();
         
-        atualizarDashboard(); 
-        carregarRankings(); 
-        window.mudarTela('social', 'Feed de Notícias', 'fa-hashtag');
+        atualizarDashboard();
+        carregarRankings();
+        window.mudarTela('home');
     } catch (e) { alert("Erro: " + e.message); } 
-    finally { document.getElementById('btnSalvar').innerHTML = "Salvar e Coletiva 🎙️"; }
+    finally { document.getElementById('btnSalvar').innerHTML = "Registrar & IA Feedback"; }
 }
 
 window.criarCarreira = async function() {
@@ -734,8 +1044,8 @@ window.criarCarreira = async function() {
         document.getElementById('barraNavegacao').classList.remove('hidden'); 
         document.getElementById('btnSair').classList.remove('hidden');
         
-        window.mudarTela('home', 'Home', 'fa-home');
-        iniciarApp(); // Roda a master para dar o sync final
+        window.mudarTela('home');
+        iniciarApp();
     } catch(e) {}
 }
 
