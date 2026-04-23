@@ -2,7 +2,7 @@ const CACHE_NAME = 'mrcarrer-v4';
 const urlsToCache = [
   '/',
   '/index.html',
-  '/app.js',
+  '/app.js?v=4',
   '/manifest.json',
   '/icon-512x512.png'
 ];
